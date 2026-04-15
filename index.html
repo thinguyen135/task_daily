@@ -457,6 +457,89 @@ select option{background:#0c0c1e;}
 
 ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:rgba(0,0,0,.2);}
 ::-webkit-scrollbar-thumb{background:rgba(0,245,255,.2);border-radius:3px;}
+
+/* ── STREAK ── */
+.streak-card{background:linear-gradient(135deg,rgba(255,107,0,.09),rgba(255,60,0,.05));
+  border:1px solid rgba(255,107,0,.28);border-radius:16px;padding:16px 20px;
+  margin-bottom:14px;position:relative;overflow:hidden;}
+.streak-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,#ff6b00,#ff3800,transparent);}
+.streak-top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.streak-main{display:flex;align-items:center;gap:14px;}
+.streak-fire{font-size:38px;filter:drop-shadow(0 0 12px #ff6b00);animation:fire-pulse 1.4s ease infinite alternate;}
+@keyframes fire-pulse{from{transform:scale(1);}to{transform:scale(1.12) rotate(-4deg);}}
+.streak-count{font-family:'Orbitron',monospace;font-size:36px;font-weight:900;color:#ff8c42;
+  text-shadow:0 0 24px rgba(255,107,0,.6);line-height:1;}
+.streak-label{font-size:11px;color:rgba(255,180,100,.7);letter-spacing:2px;font-family:'Space Mono',monospace;}
+.streak-info{text-align:right;}
+.streak-best{font-family:'Space Mono',monospace;font-size:10px;color:rgba(255,180,100,.5);margin-bottom:3px;}
+.streak-status{font-size:11px;padding:4px 12px;border-radius:20px;font-family:'Space Mono',monospace;letter-spacing:1px;}
+.streak-ok{background:rgba(57,255,20,.1);color:#39ff14;border:1px solid rgba(57,255,20,.3);}
+.streak-pending{background:rgba(255,225,0,.1);color:#ffe100;border:1px solid rgba(255,225,0,.3);}
+.streak-chain{display:flex;gap:4px;flex-wrap:wrap;margin-top:12px;align-items:center;}
+.streak-day{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+  font-size:14px;transition:all .2s;position:relative;}
+.streak-day.done{background:rgba(255,107,0,.22);border:1px solid rgba(255,107,0,.5);}
+.streak-day.today{border:2px solid #ff8c42;box-shadow:0 0 12px rgba(255,107,0,.4);}
+.streak-day.empty{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);}
+.streak-day-lbl{font-family:'Space Mono',monospace;font-size:7px;color:rgba(255,255,255,.3);
+  position:absolute;bottom:-13px;left:50%;transform:translateX(-50%);white-space:nowrap;}
+
+/* ── TICKET BADGE ── */
+.ticket-badge{display:inline-flex;align-items:center;gap:6px;
+  background:linear-gradient(135deg,rgba(255,225,0,.14),rgba(255,107,53,.1));
+  border:1px solid rgba(255,225,0,.35);border-radius:20px;padding:5px 13px;
+  font-family:'Orbitron',monospace;font-size:11px;color:var(--c3);
+  cursor:pointer;transition:all .25s;}
+.ticket-badge:hover{box-shadow:0 0 18px rgba(255,225,0,.3);transform:translateY(-1px);}
+.ticket-num{font-size:16px;font-weight:900;}
+
+/* ── WHEEL PAGE ── */
+#pnl-wheel{}
+.wheel-header{text-align:center;padding:10px 0 18px;}
+.wheel-title{font-family:'Orbitron',monospace;font-size:22px;font-weight:900;letter-spacing:4px;
+  background:linear-gradient(135deg,#ff6b00,#ffe100,#ff6b00);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 0 18px rgba(255,107,0,.5));}
+.wheel-sub{font-family:'Space Mono',monospace;font-size:10px;color:var(--mut);letter-spacing:3px;margin-top:4px;}
+.wheel-area{display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;justify-content:center;}
+.wheel-canvas-wrap{position:relative;flex-shrink:0;}
+#wheelCanvas{display:block;filter:drop-shadow(0 0 30px rgba(255,107,0,.4));}
+.wheel-pointer{position:absolute;top:-8px;left:50%;transform:translateX(-50%);
+  font-size:30px;filter:drop-shadow(0 0 8px rgba(255,68,102,.8));z-index:10;
+  animation:ptr-bob .8s ease infinite alternate;}
+@keyframes ptr-bob{from{transform:translateX(-50%) translateY(0);}to{transform:translateX(-50%) translateY(4px);}}
+.wheel-controls{flex:1;min-width:240px;}
+.wheel-ticket-row{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+.wheel-ticket-count{font-family:'Orbitron',monospace;font-size:28px;font-weight:900;
+  color:var(--c3);text-shadow:0 0 20px rgba(255,225,0,.5);}
+.wheel-ticket-lbl{font-family:'Space Mono',monospace;font-size:10px;color:var(--mut);letter-spacing:2px;}
+.spin-btn{width:100%;padding:16px;font-size:14px;letter-spacing:3px;
+  background:linear-gradient(135deg,rgba(255,107,0,.3),rgba(255,225,0,.2));
+  color:#ff8c42;border:2px solid rgba(255,107,0,.5);border-radius:14px;
+  font-family:'Orbitron',monospace;font-weight:900;cursor:pointer;transition:all .3s;
+  box-shadow:0 0 24px rgba(255,107,0,.2);}
+.spin-btn:hover:not(:disabled){box-shadow:0 0 36px rgba(255,107,0,.5);transform:translateY(-2px);}
+.spin-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+.wheel-result{margin-top:14px;padding:14px;border-radius:12px;text-align:center;
+  background:rgba(0,0,0,.3);border:1px solid rgba(255,225,0,.18);min-height:56px;
+  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;}
+.wheel-result-emoji{font-size:30px;animation:pop .4s ease;}
+.wheel-result-text{font-family:'Orbitron',monospace;font-size:12px;color:var(--c3);letter-spacing:2px;}
+@keyframes pop{from{transform:scale(0.5);}to{transform:scale(1);}}
+.prize-list{margin-top:16px;}
+.prize-row{display:flex;align-items:center;gap:10px;padding:7px 10px;
+  border-radius:8px;margin-bottom:5px;border:1px solid rgba(255,255,255,.05);
+  background:rgba(0,0,0,.2);}
+.prize-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+.prize-name{font-size:12px;flex:1;}
+.prize-pct{font-family:'Space Mono',monospace;font-size:10px;color:var(--mut);}
+.spin-history{margin-top:16px;}
+.spin-hist-ttl{font-family:'Space Mono',monospace;font-size:9px;color:var(--mut);letter-spacing:2px;margin-bottom:8px;}
+.spin-hist-item{display:flex;align-items:center;gap:8px;padding:6px 8px;
+  border-radius:7px;background:rgba(0,0,0,.2);margin-bottom:5px;
+  border:1px solid rgba(255,255,255,.05);font-size:12px;}
+.spin-hist-time{font-family:'Space Mono',monospace;font-size:9px;color:var(--mut);}
 </style>
 </head>
 <body>
@@ -669,10 +752,33 @@ select option{background:#0c0c1e;}
     <button class="tb act" onclick="switchTab('day',this)">📅 Ngày</button>
     <button class="tb" onclick="switchTab('month',this)">🗓️ Tháng</button>
     <button class="tb" onclick="switchTab('year',this)">🌟 Năm</button>
+    <button class="tb" onclick="switchTab('wheel',this)" id="tbWheel">🎡 Quay</button>
+  </div>
+  <div style="display:flex;justify-content:flex-end;margin:-8px 0 10px;">
+    <div class="ticket-badge" onclick="switchTab('wheel',document.getElementById('tbWheel'))" title="Vé quay thưởng">
+      🎫 <span class="ticket-num" id="ticketDisplay">0</span> <span style="font-size:9px;opacity:.7">VÉ</span>
+    </div>
   </div>
 
   <!-- ══ TAB NGÀY ══ -->
   <div class="pnl act" id="pnl-day">
+    <!-- STREAK CARD -->
+    <div class="streak-card" id="streakCard">
+      <div class="streak-top">
+        <div class="streak-main">
+          <div class="streak-fire">🔥</div>
+          <div>
+            <div class="streak-count" id="streakCount">0</div>
+            <div class="streak-label">NGÀY LIÊN TIẾP</div>
+          </div>
+        </div>
+        <div class="streak-info">
+          <div class="streak-best" id="streakBest">Cao nhất: 0 ngày</div>
+          <div class="streak-status streak-pending" id="streakStatus">⏳ Đang chờ...</div>
+        </div>
+      </div>
+      <div class="streak-chain" id="streakChain"></div>
+    </div>
     <div class="srow">
       <div class="sb"><div class="sv" id="stT">0</div><div class="sl">Tổng</div></div>
       <div class="sb"><div class="sv" id="stD" style="color:var(--grn)">0</div><div class="sl">Xong</div></div>
@@ -895,6 +1001,75 @@ select option{background:#0c0c1e;}
   </div>
 </div><!-- end aw -->
 
+<!-- ══ WHEEL PANEL (outside .aw for full control) ══ -->
+<div class="pnl" id="pnl-wheel" style="max-width:1160px;margin:0 auto;padding:0 14px 80px;position:relative;z-index:1;">
+  <div class="wheel-header">
+    <div class="wheel-title">🎡 VÒNG QUAY MAY MẮN</div>
+    <div class="wheel-sub">Hoàn thành nhiệm vụ → nhận vé → quay thưởng!</div>
+  </div>
+  <div class="wheel-area">
+    <div class="wheel-canvas-wrap">
+      <div class="wheel-pointer">▼</div>
+      <canvas id="wheelCanvas" width="320" height="320"></canvas>
+    </div>
+    <div class="wheel-controls">
+      <div class="card" style="border-color:rgba(255,107,0,.28)">
+        <div class="ct yl">🎫 VÉ CỦA BẠN</div>
+        <div class="wheel-ticket-row">
+          <div>
+            <div class="wheel-ticket-count" id="wheelTicketCount">0</div>
+            <div class="wheel-ticket-lbl">VÉ HIỆN CÓ</div>
+          </div>
+          <div style="font-size:28px;opacity:.4">🎟️</div>
+        </div>
+        <div style="font-size:12px;color:var(--mut);margin-bottom:14px;line-height:1.6;">
+          ✦ Hoàn thành 1 nhiệm vụ = nhận 1 vé<br>
+          ✦ Hoàn thành tất cả nhiệm vụ = chuỗi lửa tăng
+        </div>
+        <button class="spin-btn" id="spinBtn" onclick="spinWheel()">🎡 QUAY (1 VÉ)</button>
+        <div class="wheel-result" id="wheelResult">
+          <div style="color:var(--mut);font-family:Space Mono,monospace;font-size:11px;letter-spacing:2px;">Nhấn quay để bắt đầu!</div>
+        </div>
+      </div>
+      <div class="card" style="border-color:rgba(255,107,0,.28);margin-top:0">
+        <div class="ct yl" style="font-size:10px;margin-bottom:10px;justify-content:space-between;flex-wrap:wrap;gap:6px;">
+          <span>🎁 PHẦN THƯỞNG</span>
+          <button class="btn byl bxs" onclick="openAddPrize()">＋ Thêm ô</button>
+        </div>
+        <div id="prizeList"></div>
+        <!-- Add/Edit prize form (inline, hidden by default) -->
+        <div id="prizeForm" style="display:none;margin-top:10px;padding:12px;background:rgba(0,0,0,.3);border-radius:10px;border:1px solid rgba(255,225,0,.18);">
+          <div style="font-family:Orbitron,monospace;font-size:10px;color:var(--c3);letter-spacing:2px;margin-bottom:10px;" id="prizeFormTitle">✦ THÊM Ô THƯỞNG</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+            <div style="flex:0 0 64px;">
+              <label class="fl">Emoji</label>
+              <input type="text" id="pzEmoji" placeholder="🎁" style="text-align:center;font-size:18px;"/>
+            </div>
+            <div style="flex:1;min-width:120px;">
+              <label class="fl">Tên phần thưởng</label>
+              <input type="text" id="pzLabel" placeholder="Xem phim 1 tiếng..."/>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+            <div style="flex:1;min-width:80px;">
+              <label class="fl">Màu ô</label>
+              <input type="color" id="pzColor" value="#ff6b00" style="width:100%;height:36px;padding:2px 4px;border-radius:8px;border:1px solid rgba(255,225,0,.2);background:rgba(0,0,0,.3);cursor:pointer;"/>
+            </div>
+          </div>
+          <div style="display:flex;gap:7px;">
+            <button class="btn byl bsm" style="flex:1" onclick="savePrize()">✦ Lưu</button>
+            <button class="btn bgh bsm" onclick="cancelPrize()">Hủy</button>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="border-color:rgba(255,107,0,.18);margin-top:0">
+        <div class="ct yl" style="font-size:10px;margin-bottom:10px;">🕒 LỊCH SỬ QUAY</div>
+        <div id="spinHistory"><div style="font-size:12px;color:var(--mut);text-align:center;padding:8px;">Chưa có lịch sử</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 // ═══ STARS ═══
 (function(){
@@ -928,7 +1103,12 @@ function setText(id,v){if(getEl(id))getEl(id).textContent=v;}
 
 // ═══ STORAGE ═══
 var SK='nova_planner_v6';
-var D={tasks:{},dayNotes:{},monthGoals:{},yearGoals:{},habits:{},moods:{},monthReview:{},yearReview:{},metrics:{}};
+var D={tasks:{},dayNotes:{},monthGoals:{},yearGoals:{},habits:{},moods:{},monthReview:{},yearReview:{},metrics:{},
+  streak:{count:0,best:0,lastDate:'',history:[]},
+  tickets:0,
+  spinHistory:[],
+  prizes:[]
+};
 
 function loadD(){
   try{
@@ -1097,10 +1277,15 @@ function doneFromBanner(taskId){
   var k=todayKey(),tasks=D.tasks[k]||[];
   var t=null;
   for(var i=0;i<tasks.length;i++)if(tasks[i].id===taskId){t=tasks[i];break;}
-  if(t&&!t.done){t.done=true;saveD();}
+  if(t&&!t.done){
+    t.done=true;
+    if(!D.tickets)D.tickets=0;
+    D.tickets++;
+    saveD();
+  }
   stopRinging(taskId);
-  renderTasks();
-  showToast('✅ Hoàn thành!',t?esc(t.name)+' — Xuất sắc!':'Nhiệm vụ đã xong!');
+  renderTasks();updateTicketDisplay();
+  showToast('✅ Hoàn thành! 🎫+1',t?esc(t.name)+' — Xuất sắc!':'Nhiệm vụ đã xong!');
 }
 
 // ═══ CLOCK ═══
@@ -1120,6 +1305,7 @@ function switchTab(name,el){
   getEl('pnl-'+name).classList.add('act');
   if(name==='month')renderMonth();
   if(name==='year')renderYear();
+  if(name==='wheel'){renderWheelTickets();renderSpinHistory();}
 }
 
 // ═══════════════════════════════════
@@ -1140,17 +1326,20 @@ function toggleTask(id){
   var k=todayKey(),tasks=D.tasks[k]||[];
   var t=null;for(var i=0;i<tasks.length;i++)if(tasks[i].id===id){t=tasks[i];break;}
   if(t){
+    var wasDone=t.done;
     t.done=!t.done;
     if(t.done){
-      // Nếu task này đang ringing thì tắt chuông
-      if(ringLoops[id]){
-        stopRinging(id);
-      } else {
-        playDone();
-      }
+      // Award 1 ticket
+      if(!D.tickets)D.tickets=0;
+      D.tickets++;
+      if(ringLoops[id]){stopRinging(id);}else{playDone();}
+      showToast('🎫 +1 Vé!','Hoàn thành "'+t.name.slice(0,20)+'" — nhận 1 vé quay!');
+    } else {
+      // Un-complete: remove ticket (min 0)
+      if(D.tickets>0)D.tickets--;
     }
   }
-  saveD();renderTasks();
+  saveD();renderTasks();updateTicketDisplay();
 }
 
 function deleteTask(id){
@@ -1169,6 +1358,10 @@ function renderTasks(){
   setText('stT',tot);setText('stD',done);setText('stL',tot-done);setText('stH',high);
   var pct=tot?Math.round(done/tot*100):0;
   getEl('dpB').style.width=pct+'%';setText('dpP',pct+'%');
+  // streak check
+  checkAndUpdateStreak(tasks,done,tot);
+  renderStreakUI();
+  updateTicketDisplay();
   var list=getEl('taskList');
   if(!tasks.length){list.innerHTML='<div class="es"><div class="ei">🚀</div><div class="et">Chưa có mục tiêu — hãy bắt đầu!</div></div>';return;}
   var sorted=tasks.slice().sort(function(a,b){if(!a.time&&!b.time)return 0;if(!a.time)return 1;if(!b.time)return -1;return a.time.localeCompare(b.time);});
@@ -1899,6 +2092,343 @@ function renderYRevDisplay(){
   if(rev.score){setVal('yrScore',rev.score);setText('yrScoreD',rev.score+'/10');}
 }
 
+// ═══════════════════════════════════════
+// ═══ STREAK SYSTEM ═══
+// ═══════════════════════════════════════
+function checkAndUpdateStreak(tasks, done, tot){
+  if(!D.streak)D.streak={count:0,best:0,lastDate:'',history:[]};
+  var today=todayKey();
+  var allDone=(tot>0&&done===tot);
+
+  // Check if we missed a day (lastDate is not today or yesterday)
+  if(D.streak.lastDate&&D.streak.lastDate!==today){
+    var last=new Date(D.streak.lastDate);
+    var t=new Date();t.setHours(0,0,0,0);last.setHours(0,0,0,0);
+    var diff=Math.round((t-last)/(1000*60*60*24));
+    if(diff>1){
+      // Missed more than 1 day → reset
+      D.streak.count=0;
+    }
+  }
+
+  if(allDone){
+    if(D.streak.lastDate!==today){
+      // New day completion
+      D.streak.count=(D.streak.count||0)+1;
+      D.streak.lastDate=today;
+      if(D.streak.count>(D.streak.best||0))D.streak.best=D.streak.count;
+      // Add to history
+      if(!D.streak.history)D.streak.history=[];
+      D.streak.history.push(today);
+      // Keep last 30 days max
+      if(D.streak.history.length>30)D.streak.history=D.streak.history.slice(-30);
+      saveD();
+      // Celebrate milestone
+      if(D.streak.count>1){
+        playFireStreak();
+        showToast('🔥 CHUỖI LỬA × '+D.streak.count,'Tuyệt vời! '+D.streak.count+' ngày liên tiếp!');
+      }
+    }
+  }
+}
+
+function playFireStreak(){
+  var c=getAC();if(!c)return;
+  var notes=[523,659,784,1047];
+  notes.forEach(function(f,i){
+    var o=c.createOscillator(),g=c.createGain();
+    o.connect(g);g.connect(c.destination);
+    o.type='triangle';o.frequency.value=f;
+    var t=c.currentTime+i*.12;
+    g.gain.setValueAtTime(0,t);
+    g.gain.linearRampToValueAtTime(.25,t+.04);
+    g.gain.exponentialRampToValueAtTime(.001,t+.22);
+    o.start(t);o.stop(t+.23);
+  });
+}
+
+function renderStreakUI(){
+  if(!D.streak)D.streak={count:0,best:0,lastDate:'',history:[]};
+  var count=D.streak.count||0;
+  var best=D.streak.best||0;
+  var today=todayKey();
+  var todayDone=(D.streak.lastDate===today);
+  setText('streakCount',count);
+  setText('streakBest','Cao nhất: '+best+' ngày');
+  var statusEl=getEl('streakStatus');
+  var k=todayKey();
+  var tasks=D.tasks[k]||[];
+  var tot=tasks.length,done=tasks.filter(function(t){return t.done;}).length;
+  if(todayDone){
+    statusEl.className='streak-status streak-ok';
+    statusEl.textContent='✅ Hôm nay hoàn thành!';
+  } else if(tot>0){
+    statusEl.className='streak-status streak-pending';
+    statusEl.textContent='⏳ Còn '+(tot-done)+' nhiệm vụ...';
+  } else {
+    statusEl.className='streak-status streak-pending';
+    statusEl.textContent='📋 Thêm nhiệm vụ để bắt đầu';
+  }
+
+  // Render chain — last 10 days
+  var chain=getEl('streakChain');
+  var days=['CN','T2','T3','T4','T5','T6','T7'];
+  var html='';
+  var history=D.streak.history||[];
+  for(var i=9;i>=0;i--){
+    var d=new Date();d.setDate(d.getDate()-i);
+    var dk=d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+    var isToday=(i===0);
+    var isDone=history.indexOf(dk)>=0;
+    var cls='streak-day '+(isToday?'today ':'')+( isDone?'done':'empty');
+    var emoji=isDone?'✅':(isToday&&!isDone?'🔥':'·');
+    var lbl=pad(d.getDate())+'/'+pad(d.getMonth()+1);
+    html+='<div class="'+cls+'" title="'+lbl+'">'+emoji+'</div>';
+  }
+  chain.innerHTML=html;
+}
+
+// ═══════════════════════════════════════
+// ═══ TICKET SYSTEM ═══
+// ═══════════════════════════════════════
+function updateTicketDisplay(){
+  if(!D.tickets)D.tickets=0;
+  setText('ticketDisplay',D.tickets);
+  var wt=getEl('wheelTicketCount');if(wt)wt.textContent=D.tickets;
+  var sb=getEl('spinBtn');if(sb)sb.disabled=(D.tickets<1||wheelSpinning);
+}
+
+// ═══════════════════════════════════════
+// ═══ LUCKY WHEEL ═══
+// ═══════════════════════════════════════
+var DEFAULT_PRIZES=[
+  {id:'p1',label:'Nghỉ ngơi 30 phút',emoji:'😴',color:'#ff6b00',weight:15},
+  {id:'p2',label:'Thêm 1 vé quay',emoji:'🎫',color:'#ffe100',weight:20},
+  {id:'p3',label:'Xem phim 1 tiếng',emoji:'🎬',color:'#00f5ff',weight:10},
+  {id:'p4',label:'Ăn vặt yêu thích',emoji:'🍜',color:'#ff00c8',weight:18},
+  {id:'p5',label:'Thêm 2 vé quay',emoji:'🎟️',color:'#39ff14',weight:12},
+  {id:'p6',label:'Tự thưởng nhỏ',emoji:'🎁',color:'#a855f7',weight:15},
+  {id:'p7',label:'Thêm 3 vé quay',emoji:'💎',color:'#ff4466',weight:5},
+  {id:'p8',label:'Chơi game 1h',emoji:'🎮',color:'#ff8c42',weight:5},
+];
+
+function getPrizes(){
+  if(!D.prizes||!D.prizes.length){D.prizes=JSON.parse(JSON.stringify(DEFAULT_PRIZES));}
+  return D.prizes;
+}
+
+var wheelAngle=0;
+var wheelSpinning=false;
+var editingPrizeId=null;
+
+// ── Prize CRUD ──
+function openAddPrize(){
+  editingPrizeId=null;
+  setText('prizeFormTitle','✦ THÊM Ô THƯỞNG');
+  setVal('pzEmoji','');setVal('pzLabel','');
+  document.getElementById('pzColor').value='#ff6b00';
+  setVal('pzWeight','10');
+  getEl('prizeForm').style.display='block';
+  getEl('pzLabel').focus();
+}
+
+function openEditPrize(id){
+  var prizes=getPrizes();
+  var p=null;for(var i=0;i<prizes.length;i++)if(prizes[i].id===id){p=prizes[i];break;}
+  if(!p)return;
+  editingPrizeId=id;
+  setText('prizeFormTitle','✏️ SỬA Ô THƯỞNG');
+  setVal('pzEmoji',p.emoji);
+  setVal('pzLabel',p.label);
+  document.getElementById('pzColor').value=p.color;
+  setVal('pzWeight',p.weight);
+  getEl('prizeForm').style.display='block';
+  getEl('pzLabel').focus();
+}
+
+function savePrize(){
+  var emoji=getVal('pzEmoji').trim()||'🎁';
+  var label=getVal('pzLabel').trim();
+  if(!label){flashEl('pzLabel');return;}
+  var color=document.getElementById('pzColor').value||'#ff6b00';
+  var prizes=getPrizes();
+  if(editingPrizeId){
+    for(var i=0;i<prizes.length;i++){
+      if(prizes[i].id===editingPrizeId){
+        prizes[i].emoji=emoji;prizes[i].label=label;
+        prizes[i].color=color;break;
+      }
+    }
+  } else {
+    prizes.push({id:uid(),label:label,emoji:emoji,color:color});
+  }
+  D.prizes=prizes;saveD();
+  cancelPrize();
+  renderPrizeList();drawWheel(wheelAngle);
+  playAdd();showToast('✅ Đã lưu','Ô thưởng đã được cập nhật!');
+}
+
+function cancelPrize(){
+  getEl('prizeForm').style.display='none';
+  editingPrizeId=null;
+}
+
+function deletePrize(id){
+  var prizes=getPrizes();
+  if(prizes.length<=2){showToast('⚠️ Tối thiểu 2 ô','Vòng quay cần ít nhất 2 phần thưởng!');return;}
+  D.prizes=prizes.filter(function(p){return p.id!==id;});
+  saveD();renderPrizeList();drawWheel(wheelAngle);
+}
+
+function renderPrizeList(){
+  var prizes=getPrizes();
+  var el=getEl('prizeList');if(!el)return;
+  var html='';
+  prizes.forEach(function(p){
+    
+    html+='<div class="prize-row">';
+    html+='<div class="prize-dot" style="background:'+p.color+'"></div>';
+    html+='<div class="prize-name">'+p.emoji+' '+esc(p.label)+'</div>';
+    html+='<div style="display:flex;align-items:center;gap:5px;">';
+    html+='<button class="btn bgh bxs" onclick="openEditPrize(\''+p.id+'\')" title="Sửa" style="padding:3px 7px!important;">✏️</button>';
+    html+='<button class="btn bdel bxs" onclick="deletePrize(\''+p.id+'\')" title="Xóa" style="padding:3px 7px!important;">✕</button>';
+    html+='</div></div>';
+  });
+  el.innerHTML=html;
+}
+
+function drawWheel(angle){
+  var canvas=getEl('wheelCanvas');if(!canvas)return;
+  var prizes=getPrizes();
+  if(!prizes.length)return;
+  var ctx=canvas.getContext('2d');
+  var cx=160,cy=160,r=148;
+  var n=prizes.length;
+  var arc=(2*Math.PI)/n;
+  ctx.clearRect(0,0,320,320);
+  for(var i=0;i<n;i++){
+    var start=angle+i*arc;
+    var end=start+arc;
+    ctx.beginPath();ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,r,start,end);ctx.closePath();
+    ctx.fillStyle=prizes[i].color;ctx.fill();
+    ctx.strokeStyle='rgba(0,0,0,.4)';ctx.lineWidth=2;ctx.stroke();
+    ctx.save();
+    ctx.translate(cx,cy);ctx.rotate(start+arc/2);
+    ctx.translate(r*0.62,0);ctx.rotate(Math.PI/2);
+    ctx.font='bold 13px Exo 2, sans-serif';
+    ctx.fillStyle='rgba(0,0,0,.85)';ctx.textAlign='center';
+    ctx.fillText(prizes[i].emoji,0,0);
+    ctx.font='9px Space Mono, monospace';
+    ctx.fillStyle='rgba(0,0,0,.7)';
+    var words=prizes[i].label.split(' ');
+    words.forEach(function(w,wi){ctx.fillText(w,0,12+wi*10);});
+    ctx.restore();
+  }
+  ctx.beginPath();ctx.arc(cx,cy,26,0,2*Math.PI);
+  var grd=ctx.createRadialGradient(cx,cy,4,cx,cy,26);
+  grd.addColorStop(0,'#ffe100');grd.addColorStop(1,'#ff6b00');
+  ctx.fillStyle=grd;ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.3)';ctx.lineWidth=2;ctx.stroke();
+  ctx.font='bold 14px Orbitron, monospace';
+  ctx.fillStyle='rgba(0,0,0,.8)';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('✦',cx,cy);
+  ctx.beginPath();ctx.arc(cx,cy,r,0,2*Math.PI);
+  ctx.strokeStyle='rgba(255,107,0,.5)';ctx.lineWidth=3;ctx.stroke();
+  ctx.beginPath();ctx.arc(cx,cy,r+4,0,2*Math.PI);
+  ctx.strokeStyle='rgba(255,225,0,.2)';ctx.lineWidth=1;ctx.stroke();
+}
+
+function spinWheel(){
+  var prizes=getPrizes();
+  if(wheelSpinning||D.tickets<1||!prizes.length)return;
+  wheelSpinning=true;
+  D.tickets--;saveD();updateTicketDisplay();
+  getEl('spinBtn').disabled=true;
+  getEl('wheelResult').innerHTML='<div style="color:var(--c3);font-family:Orbitron,monospace;font-size:12px;letter-spacing:2px;animation:flk 0.5s infinite;">🎡 ĐANG QUAY...</div>';
+
+  var chosen = Math.floor(Math.random() * prizes.length);
+
+  var n=prizes.length;
+  var arc=(2*Math.PI)/n;
+  var targetSegCenter=-(arc/2+chosen*arc);
+  var spins=5+Math.floor(Math.random()*4);
+  var targetAngle=targetSegCenter-wheelAngle+spins*2*Math.PI;
+  targetAngle=((targetAngle%(2*Math.PI))+2*Math.PI)%(2*Math.PI)+spins*2*Math.PI;
+
+  var startAngle=wheelAngle;
+  var duration=3500+Math.random()*1000;
+  var startTime=null;
+
+  function easeOut(t){return 1-Math.pow(1-t,4);}
+  function animate(ts){
+    if(!startTime)startTime=ts;
+    var elapsed=ts-startTime;
+    var progress=Math.min(elapsed/duration,1);
+    var curr=startAngle+targetAngle*easeOut(progress);
+    drawWheel(curr);
+    if(progress<1){requestAnimationFrame(animate);}
+    else{
+      wheelSpinning=false;
+      wheelAngle=((startAngle+targetAngle)%(2*Math.PI));
+      drawWheel(wheelAngle);
+      onSpinDone(prizes[chosen]);
+    }
+  }
+  requestAnimationFrame(animate);
+}
+
+function onSpinDone(prize){
+  var bonus=0;
+  if(/3\s*vé/i.test(prize.label))bonus=3;
+  else if(/2\s*vé/i.test(prize.label))bonus=2;
+  else if(/1\s*vé/i.test(prize.label))bonus=1;
+  if(bonus){D.tickets+=bonus;saveD();}
+  updateTicketDisplay();
+  var res=getEl('wheelResult');
+  res.innerHTML='<div class="wheel-result-emoji">'+prize.emoji+'</div><div class="wheel-result-text">'+esc(prize.label)+'</div>';
+  if(!D.spinHistory)D.spinHistory=[];
+  var now=new Date();
+  D.spinHistory.unshift({prize:prize.label,emoji:prize.emoji,time:pad(now.getHours())+':'+pad(now.getMinutes()),date:pad(now.getDate())+'/'+pad(now.getMonth()+1)});
+  if(D.spinHistory.length>20)D.spinHistory=D.spinHistory.slice(0,20);
+  saveD();renderSpinHistory();playWheelWin();
+  showToast('🎉 '+prize.emoji+' '+prize.label,'Chúc mừng! Bạn đã nhận được phần thưởng!');
+}
+
+function playWheelWin(){
+  var c=getAC();if(!c)return;
+  var seq=[523,659,784,1047,1319];
+  seq.forEach(function(f,i){
+    var o=c.createOscillator(),g=c.createGain();
+    o.connect(g);g.connect(c.destination);
+    o.type='sine';o.frequency.value=f;
+    var t=c.currentTime+i*.1;
+    g.gain.setValueAtTime(0,t);
+    g.gain.linearRampToValueAtTime(.3,t+.05);
+    g.gain.exponentialRampToValueAtTime(.001,t+.28);
+    o.start(t);o.stop(t+.3);
+  });
+}
+
+function renderWheelTickets(){
+  updateTicketDisplay();
+  drawWheel(wheelAngle);
+  renderPrizeList();
+}
+
+function renderSpinHistory(){
+  var el=getEl('spinHistory');if(!el)return;
+  if(!D.spinHistory||!D.spinHistory.length){
+    el.innerHTML='<div style="font-size:12px;color:var(--mut);text-align:center;padding:8px;">Chưa có lịch sử</div>';return;
+  }
+  var html='';
+  D.spinHistory.slice(0,10).forEach(function(h){
+    html+='<div class="spin-hist-item">'+h.emoji+'<div style="flex:1">'+h.prize+'</div>';
+    html+='<div class="spin-hist-time">'+h.date+' '+h.time+'</div></div>';
+  });
+  el.innerHTML=html;
+}
+
 // ═══ ENTER KEY ═══
 document.addEventListener('keydown',function(e){
   if(e.key==='Enter'&&!e.shiftKey){
@@ -1913,8 +2443,17 @@ document.addEventListener('keydown',function(e){
 
 // ═══ INIT ═══
 loadD();
+if(!D.streak)D.streak={count:0,best:0,lastDate:'',history:[]};
+if(!D.tickets)D.tickets=0;
+if(!D.spinHistory)D.spinHistory=[];
+if(!D.prizes||!D.prizes.length)D.prizes=JSON.parse(JSON.stringify(DEFAULT_PRIZES));
 renderTasks();
 initCal();
+setTimeout(function(){
+  var c=getEl('wheelCanvas');if(c)drawWheel(0);
+  updateTicketDisplay();
+  renderStreakUI();
+},100);
 </script>
 </body>
 </html>
