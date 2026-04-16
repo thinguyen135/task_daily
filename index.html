@@ -540,6 +540,60 @@ select option{background:#0c0c1e;}
   border-radius:7px;background:rgba(0,0,0,.2);margin-bottom:5px;
   border:1px solid rgba(255,255,255,.05);font-size:12px;}
 .spin-hist-time{font-family:'Space Mono',monospace;font-size:9px;color:var(--mut);}
+
+/* ── COUNTDOWN TIMER ── */
+.timer-card{background:var(--card);border:1px solid rgba(255,107,0,.3);border-radius:16px;
+  padding:20px;margin-top:16px;position:relative;overflow:hidden;}
+.timer-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,#ff6b00,#ffe100,transparent);opacity:.7;}
+.timer-display{font-family:'Orbitron',monospace;font-size:54px;font-weight:900;
+  text-align:center;letter-spacing:6px;line-height:1;
+  background:linear-gradient(135deg,#ff8c42,#ffe100);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 0 18px rgba(255,107,0,.45));
+  transition:filter .3s;}
+.timer-display.urgent{animation:timer-pulse .6s ease infinite alternate;}
+@keyframes timer-pulse{
+  from{filter:drop-shadow(0 0 14px rgba(255,68,102,.6));}
+  to{filter:drop-shadow(0 0 30px rgba(255,68,102,1));}}
+.timer-display.done{background:linear-gradient(135deg,#ff4466,#ff8c42);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  animation:timer-done .4s ease infinite alternate;}
+@keyframes timer-done{from{transform:scale(1);}to{transform:scale(1.04);}}
+.timer-progress-wrap{background:rgba(0,0,0,.4);border-radius:20px;height:6px;
+  overflow:hidden;margin:12px 0 16px;}
+.timer-progress-bar{height:100%;border-radius:20px;
+  background:linear-gradient(90deg,#ff6b00,#ffe100);
+  transition:width .9s linear,background .5s;}
+.timer-progress-bar.urgent{background:linear-gradient(90deg,#ff4466,#ff8c42);}
+.timer-input-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.timer-min-inp{width:80px;background:rgba(0,0,0,.4);border:1px solid rgba(255,107,0,.35);
+  border-radius:10px;padding:9px 12px;color:var(--c3);font-family:'Orbitron',monospace;
+  font-size:16px;font-weight:700;text-align:center;outline:none;transition:border-color .2s;}
+.timer-min-inp:focus{border-color:#ff8c42;box-shadow:0 0 0 3px rgba(255,107,0,.15);}
+.timer-lbl{font-family:'Space Mono',monospace;font-size:11px;color:var(--mut);letter-spacing:2px;}
+.timer-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+.timer-btn-start{padding:11px 28px;border:none;border-radius:12px;font-family:'Orbitron',monospace;
+  font-size:12px;font-weight:700;letter-spacing:2px;cursor:pointer;transition:all .25s;
+  background:linear-gradient(135deg,rgba(255,107,0,.3),rgba(255,225,0,.2));
+  color:#ff8c42;border:2px solid rgba(255,107,0,.5);}
+.timer-btn-start:hover{box-shadow:0 0 22px rgba(255,107,0,.4);transform:translateY(-1px);}
+.timer-btn-pause{padding:11px 22px;border-radius:12px;font-family:'Orbitron',monospace;
+  font-size:12px;font-weight:700;letter-spacing:2px;cursor:pointer;transition:all .25s;
+  background:linear-gradient(135deg,rgba(0,245,255,.12),rgba(255,0,200,.1));
+  color:var(--c1);border:2px solid rgba(0,245,255,.35);}
+.timer-btn-pause:hover{box-shadow:0 0 16px rgba(0,245,255,.3);transform:translateY(-1px);}
+.timer-btn-reset{padding:11px 18px;border-radius:12px;font-family:'Orbitron',monospace;
+  font-size:12px;font-weight:700;letter-spacing:2px;cursor:pointer;transition:all .25s;
+  background:rgba(255,255,255,.05);color:var(--mut);border:1px solid rgba(255,255,255,.12);}
+.timer-btn-reset:hover{color:var(--txt);border-color:rgba(255,255,255,.25);}
+.timer-status{text-align:center;font-family:'Space Mono',monospace;font-size:11px;
+  color:var(--mut);letter-spacing:2px;margin-top:10px;min-height:18px;transition:color .3s;}
+.timer-preset-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+.timer-preset{padding:5px 12px;border-radius:20px;border:1px solid rgba(255,107,0,.28);
+  background:rgba(255,107,0,.07);color:rgba(255,180,100,.7);
+  font-family:'Space Mono',monospace;font-size:10px;cursor:pointer;transition:all .2s;}
+.timer-preset:hover{border-color:rgba(255,107,0,.55);color:#ff8c42;background:rgba(255,107,0,.15);}
 </style>
 </head>
 <body>
@@ -1067,6 +1121,31 @@ select option{background:#0c0c1e;}
         <div id="spinHistory"><div style="font-size:12px;color:var(--mut);text-align:center;padding:8px;">Chưa có lịch sử</div></div>
       </div>
     </div>
+  </div>
+
+  <!-- ══ COUNTDOWN TIMER ══ -->
+  <div class="timer-card" style="max-width:520px;margin:16px auto 0;">
+    <div class="ct yl" style="justify-content:center;margin-bottom:14px;font-size:11px;">⏱️ ĐẾM NGƯỢC</div>
+    <div class="timer-display" id="timerDisplay">00:00</div>
+    <div class="timer-progress-wrap"><div class="timer-progress-bar" id="timerBar" style="width:100%"></div></div>
+    <div class="timer-input-row">
+      <span class="timer-lbl">ĐẶT THỜI GIAN:</span>
+      <input type="number" class="timer-min-inp" id="timerMinInput" min="1" max="999" value="25" oninput="timerOnInput()"/>
+      <span class="timer-lbl">phút</span>
+    </div>
+    <div class="timer-preset-row">
+      <button class="timer-preset" onclick="timerSetPreset(5)">5 phút</button>
+      <button class="timer-preset" onclick="timerSetPreset(10)">10 phút</button>
+      <button class="timer-preset" onclick="timerSetPreset(25)">25 phút 🍅</button>
+      <button class="timer-preset" onclick="timerSetPreset(45)">45 phút</button>
+      <button class="timer-preset" onclick="timerSetPreset(60)">1 giờ</button>
+    </div>
+    <div class="timer-btns">
+      <button class="timer-btn-start" id="timerStartBtn" onclick="timerStart()">▶ BẮT ĐẦU</button>
+      <button class="timer-btn-pause" id="timerPauseBtn" onclick="timerPause()" style="display:none">⏸ TẠM DỪNG</button>
+      <button class="timer-btn-reset" onclick="timerReset()">↺ ĐẶT LẠI</button>
+    </div>
+    <div class="timer-status" id="timerStatus">Đặt số phút và nhấn Bắt đầu!</div>
   </div>
 </div>
 
@@ -2351,10 +2430,16 @@ function spinWheel(){
 
   var n=prizes.length;
   var arc=(2*Math.PI)/n;
-  var targetSegCenter=-(arc/2+chosen*arc);
+  // Pointer (▼) is at the TOP of the canvas = angle -π/2 in canvas coords.
+  // Segment i center is at: wheelAngle + i*arc + arc/2
+  // We want: finalAngle + chosen*arc + arc/2 = -π/2
+  // => finalAngle = -π/2 - arc/2 - chosen*arc
+  var targetSegCenter=-(Math.PI/2+arc/2+chosen*arc);
   var spins=5+Math.floor(Math.random()*4);
-  var targetAngle=targetSegCenter-wheelAngle+spins*2*Math.PI;
-  targetAngle=((targetAngle%(2*Math.PI))+2*Math.PI)%(2*Math.PI)+spins*2*Math.PI;
+  var delta=targetSegCenter-wheelAngle;
+  // Normalise so delta is always positive (wheel spins forward)
+  delta=((delta%(2*Math.PI))+(2*Math.PI))%(2*Math.PI);
+  var totalRotation=delta+spins*2*Math.PI;
 
   var startAngle=wheelAngle;
   var duration=3500+Math.random()*1000;
@@ -2365,12 +2450,12 @@ function spinWheel(){
     if(!startTime)startTime=ts;
     var elapsed=ts-startTime;
     var progress=Math.min(elapsed/duration,1);
-    var curr=startAngle+targetAngle*easeOut(progress);
+    var curr=startAngle+totalRotation*easeOut(progress);
     drawWheel(curr);
     if(progress<1){requestAnimationFrame(animate);}
     else{
       wheelSpinning=false;
-      wheelAngle=((startAngle+targetAngle)%(2*Math.PI));
+      wheelAngle=((startAngle+totalRotation)%(2*Math.PI));
       drawWheel(wheelAngle);
       onSpinDone(prizes[chosen]);
     }
@@ -2429,6 +2514,112 @@ function renderSpinHistory(){
   el.innerHTML=html;
 }
 
+// ═══════════════════════════════════════
+// ═══ COUNTDOWN TIMER ═══
+// ═══════════════════════════════════════
+var timerInterval=null;
+var timerRemaining=0;
+var timerTotal=0;
+var timerRunning=false;
+
+function timerFmt(s){
+  var m=Math.floor(s/60),sec=s%60;
+  return (m<10?'0':'')+m+':'+(sec<10?'0':'')+sec;
+}
+function timerOnInput(){
+  if(!timerRunning){
+    var mins=parseInt(getEl('timerMinInput').value)||0;
+    timerRemaining=mins*60;timerTotal=timerRemaining;
+    getEl('timerDisplay').textContent=timerFmt(timerRemaining);
+    getEl('timerBar').style.width='100%';
+    getEl('timerDisplay').className='timer-display';
+    getEl('timerBar').className='timer-progress-bar';
+    getEl('timerStatus').textContent='Đặt số phút và nhấn Bắt đầu!';
+  }
+}
+function timerSetPreset(mins){
+  if(timerRunning)timerReset();
+  getEl('timerMinInput').value=mins;
+  timerRemaining=mins*60;timerTotal=timerRemaining;
+  getEl('timerDisplay').textContent=timerFmt(timerRemaining);
+  getEl('timerDisplay').className='timer-display';
+  getEl('timerBar').style.width='100%';
+  getEl('timerBar').className='timer-progress-bar';
+  getEl('timerStatus').textContent='Sẵn sàng! Nhấn Bắt đầu.';
+}
+function timerStart(){
+  var mins=parseInt(getEl('timerMinInput').value)||0;
+  if(mins<1)return;
+  if(!timerRunning&&timerRemaining<=0){timerRemaining=mins*60;timerTotal=timerRemaining;}
+  if(timerTotal===0)timerTotal=timerRemaining;
+  timerRunning=true;
+  getEl('timerStartBtn').style.display='none';
+  getEl('timerPauseBtn').style.display='';
+  getEl('timerStatus').textContent='⏱ Đang đếm ngược...';
+  timerInterval=setInterval(function(){
+    timerRemaining--;
+    var pct=timerTotal>0?Math.max(0,timerRemaining/timerTotal*100):0;
+    var disp=getEl('timerDisplay'),bar=getEl('timerBar');
+    disp.textContent=timerFmt(timerRemaining);
+    bar.style.width=pct+'%';
+    if(timerRemaining<=10&&timerRemaining>0){
+      disp.className='timer-display urgent';
+      bar.className='timer-progress-bar urgent';
+      getEl('timerStatus').textContent='⚡ Sắp hết giờ!';
+    }
+    if(timerRemaining<=0){
+      clearInterval(timerInterval);timerRunning=false;
+      disp.textContent='00:00';
+      disp.className='timer-display done';
+      bar.style.width='0%';
+      getEl('timerStartBtn').style.display='';
+      getEl('timerStartBtn').textContent='▶ BẮT ĐẦU';
+      getEl('timerPauseBtn').style.display='none';
+      getEl('timerStatus').textContent='🔔 Hết giờ rồi!';
+      timerRing();
+      showToast('⏰ Hết giờ!','Thời gian đếm ngược đã kết thúc!');
+    }
+  },1000);
+}
+function timerPause(){
+  clearInterval(timerInterval);timerRunning=false;
+  getEl('timerStartBtn').style.display='';
+  getEl('timerStartBtn').textContent='▶ TIẾP TỤC';
+  getEl('timerPauseBtn').style.display='none';
+  getEl('timerStatus').textContent='⏸ Đã tạm dừng — nhấn Tiếp tục.';
+}
+function timerReset(){
+  clearInterval(timerInterval);timerRunning=false;
+  var mins=parseInt(getEl('timerMinInput').value)||25;
+  timerRemaining=mins*60;timerTotal=timerRemaining;
+  getEl('timerDisplay').textContent=timerFmt(timerRemaining);
+  getEl('timerDisplay').className='timer-display';
+  getEl('timerBar').style.width='100%';
+  getEl('timerBar').className='timer-progress-bar';
+  getEl('timerStartBtn').style.display='';
+  getEl('timerStartBtn').textContent='▶ BẮT ĐẦU';
+  getEl('timerPauseBtn').style.display='none';
+  getEl('timerStatus').textContent='Đặt số phút và nhấn Bắt đầu!';
+}
+function timerRing(){
+  var c=getAC();if(!c)return;
+  var seq=[
+    {f:880,t:0,dur:.18},{f:1109,t:.22,dur:.18},{f:1319,t:.44,dur:.22},
+    {f:880,t:.78,dur:.16},{f:1109,t:.98,dur:.16},{f:1319,t:1.18,dur:.3},
+    {f:1760,t:1.58,dur:.5}
+  ];
+  seq.forEach(function(n){
+    var o=c.createOscillator(),g=c.createGain();
+    o.connect(g);g.connect(c.destination);
+    o.type='sine';o.frequency.value=n.f;
+    var t=c.currentTime+n.t;
+    g.gain.setValueAtTime(0,t);
+    g.gain.linearRampToValueAtTime(.4,t+.03);
+    g.gain.exponentialRampToValueAtTime(.001,t+n.dur);
+    o.start(t);o.stop(t+n.dur+.05);
+  });
+}
+
 // ═══ ENTER KEY ═══
 document.addEventListener('keydown',function(e){
   if(e.key==='Enter'&&!e.shiftKey){
@@ -2453,6 +2644,8 @@ setTimeout(function(){
   var c=getEl('wheelCanvas');if(c)drawWheel(0);
   updateTicketDisplay();
   renderStreakUI();
+  timerRemaining=25*60;timerTotal=timerRemaining;
+  if(getEl('timerDisplay'))getEl('timerDisplay').textContent=timerFmt(timerRemaining);
 },100);
 </script>
 </body>
