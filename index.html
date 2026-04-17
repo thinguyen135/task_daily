@@ -436,6 +436,15 @@ select option{background:#0c0c1e;}
   to{box-shadow:0 0 28px rgba(255,68,102,.8);transform:scale(1.04);}
 }
 .abanner-btn:hover{filter:brightness(1.15);}
+.abanner-btn-skip{
+  background:rgba(255,68,102,.15)!important;
+  color:#ff6b80!important;
+  border:1px solid rgba(255,68,102,.45)!important;
+  box-shadow:none!important;
+  animation:none!important;
+  font-size:10px!important;
+  padding:7px 18px!important;
+}
 
 /* ringing task row */
 .ti.rng{
@@ -534,12 +543,7 @@ select option{background:#0c0c1e;}
 .prize-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
 .prize-name{font-size:12px;flex:1;}
 .prize-pct{font-family:'Space Mono',monospace;font-size:10px;color:var(--mut);}
-.spin-history{margin-top:16px;}
-.spin-hist-ttl{font-family:'Space Mono',monospace;font-size:9px;color:var(--mut);letter-spacing:2px;margin-bottom:8px;}
-.spin-hist-item{display:flex;align-items:center;gap:8px;padding:6px 8px;
-  border-radius:7px;background:rgba(0,0,0,.2);margin-bottom:5px;
-  border:1px solid rgba(255,255,255,.05);font-size:12px;}
-.spin-hist-time{font-family:'Space Mono',monospace;font-size:9px;color:var(--mut);}
+
 
 /* ── COUNTDOWN TIMER ── */
 .timer-card{background:var(--card);border:1px solid rgba(255,107,0,.3);border-radius:16px;
@@ -1116,10 +1120,7 @@ select option{background:#0c0c1e;}
           </div>
         </div>
       </div>
-      <div class="card" style="border-color:rgba(255,107,0,.18);margin-top:0">
-        <div class="ct yl" style="font-size:10px;margin-bottom:10px;">🕒 LỊCH SỬ QUAY</div>
-        <div id="spinHistory"><div style="font-size:12px;color:var(--mut);text-align:center;padding:8px;">Chưa có lịch sử</div></div>
-      </div>
+
     </div>
   </div>
 
@@ -1340,7 +1341,10 @@ function showAlarmBanner(task){
         '<div class="abanner-time">⏰ '+task.time+' — Hãy chuyển sang tab Ngày và hoàn thành nhiệm vụ</div>'+
       '</div>'+
     '</div>'+
-    '<button class="abanner-btn" onclick="doneFromBanner(\''+task.id+'\')">✓ HOÀN THÀNH</button>';
+    '<div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">'+
+      '<button class="abanner-btn" onclick="doneFromBanner(\''+task.id+'\')">✓ HOÀN THÀNH</button>'+
+      '<button class="abanner-btn abanner-btn-skip" onclick="skipFromBanner(\''+task.id+'\')">✕ Chưa xong</button>'+
+    '</div>';
   banner.appendChild(div);
 }
 
@@ -1367,7 +1371,20 @@ function doneFromBanner(taskId){
   showToast('✅ Hoàn thành! 🎫+1',t?esc(t.name)+' — Xuất sắc!':'Nhiệm vụ đã xong!');
 }
 
-// ═══ CLOCK ═══
+// Nhấn nút CHƯA HOÀN THÀNH từ banner — tắt chuông, không tick done
+function skipFromBanner(taskId){
+  stopRinging(taskId);
+  renderTasks();
+  showToast('⏭ Bỏ qua nhắc nhở','Nhiệm vụ vẫn còn trong danh sách chưa xong.');
+}
+
+// Tắt chuông từ task list nhưng không đánh dấu xong
+function skipTask(taskId){
+  stopRinging(taskId);
+  renderTasks();
+  showToast('⏭ Bỏ qua nhắc nhở','Nhiệm vụ vẫn còn trong danh sách chưa xong.');
+}
+
 function tick(){
   var n=new Date();
   setText('clk',pad(n.getHours())+':'+pad(n.getMinutes())+':'+pad(n.getSeconds()));
@@ -1384,7 +1401,7 @@ function switchTab(name,el){
   getEl('pnl-'+name).classList.add('act');
   if(name==='month')renderMonth();
   if(name==='year')renderYear();
-  if(name==='wheel'){renderWheelTickets();renderSpinHistory();}
+  if(name==='wheel'){renderWheelTickets();}
 }
 
 // ═══════════════════════════════════
@@ -1458,7 +1475,10 @@ function renderTasks(){
     if(t.desc)html+='<div class="tdc">'+esc(t.desc)+'</div>';
     html+='<div class="tacts">';
     if(isRinging){
-      html+='<button class="btn" style="background:linear-gradient(135deg,var(--red),#ff6b35);color:#fff;border:none;font-family:Orbitron,monospace;font-size:10px;letter-spacing:2px;padding:7px 16px;border-radius:8px;cursor:pointer;" onclick="toggleTask(\''+t.id+'\')">✓ HOÀN THÀNH — TẮT CHUÔNG</button>';
+      html+='<div style="display:flex;gap:6px;flex-wrap:wrap;">';
+      html+='<button class="btn" style="background:linear-gradient(135deg,var(--red),#ff6b35);color:#fff;border:none;font-family:Orbitron,monospace;font-size:10px;letter-spacing:1px;padding:7px 14px;border-radius:8px;cursor:pointer;" onclick="toggleTask(\''+t.id+'\')">✓ Hoàn thành</button>';
+      html+='<button class="btn" style="background:rgba(255,68,102,.1);color:#ff6b80;border:1px solid rgba(255,68,102,.35);font-family:Orbitron,monospace;font-size:10px;letter-spacing:1px;padding:7px 14px;border-radius:8px;cursor:pointer;" onclick="skipTask(\''+t.id+'\')">✕ Chưa xong</button>';
+      html+='</div>';
     } else {
       html+='<button class="btn bdel bxs" onclick="deleteTask(\''+t.id+'\')">✕ Xóa</button>';
     }
@@ -2472,11 +2492,7 @@ function onSpinDone(prize){
   updateTicketDisplay();
   var res=getEl('wheelResult');
   res.innerHTML='<div class="wheel-result-emoji">'+prize.emoji+'</div><div class="wheel-result-text">'+esc(prize.label)+'</div>';
-  if(!D.spinHistory)D.spinHistory=[];
-  var now=new Date();
-  D.spinHistory.unshift({prize:prize.label,emoji:prize.emoji,time:pad(now.getHours())+':'+pad(now.getMinutes()),date:pad(now.getDate())+'/'+pad(now.getMonth()+1)});
-  if(D.spinHistory.length>20)D.spinHistory=D.spinHistory.slice(0,20);
-  saveD();renderSpinHistory();playWheelWin();
+  saveD();playWheelWin();
   showToast('🎉 '+prize.emoji+' '+prize.label,'Chúc mừng! Bạn đã nhận được phần thưởng!');
 }
 
@@ -2501,18 +2517,7 @@ function renderWheelTickets(){
   renderPrizeList();
 }
 
-function renderSpinHistory(){
-  var el=getEl('spinHistory');if(!el)return;
-  if(!D.spinHistory||!D.spinHistory.length){
-    el.innerHTML='<div style="font-size:12px;color:var(--mut);text-align:center;padding:8px;">Chưa có lịch sử</div>';return;
-  }
-  var html='';
-  D.spinHistory.slice(0,10).forEach(function(h){
-    html+='<div class="spin-hist-item">'+h.emoji+'<div style="flex:1">'+h.prize+'</div>';
-    html+='<div class="spin-hist-time">'+h.date+' '+h.time+'</div></div>';
-  });
-  el.innerHTML=html;
-}
+
 
 // ═══════════════════════════════════════
 // ═══ COUNTDOWN TIMER ═══
@@ -2547,11 +2552,14 @@ function timerSetPreset(mins){
   getEl('timerBar').className='timer-progress-bar';
   getEl('timerStatus').textContent='Sẵn sàng! Nhấn Bắt đầu.';
 }
+var timerRingInterval=null;
+
 function timerStart(){
   var mins=parseInt(getEl('timerMinInput').value)||0;
   if(mins<1)return;
   if(!timerRunning&&timerRemaining<=0){timerRemaining=mins*60;timerTotal=timerRemaining;}
   if(timerTotal===0)timerTotal=timerRemaining;
+  if(timerRingInterval){clearInterval(timerRingInterval);timerRingInterval=null;}
   timerRunning=true;
   getEl('timerStartBtn').style.display='none';
   getEl('timerPauseBtn').style.display='';
@@ -2576,8 +2584,15 @@ function timerStart(){
       getEl('timerStartBtn').textContent='▶ BẮT ĐẦU';
       getEl('timerPauseBtn').style.display='none';
       getEl('timerStatus').textContent='🔔 Hết giờ rồi!';
-      timerRing();
       showToast('⏰ Hết giờ!','Thời gian đếm ngược đã kết thúc!');
+      // Kêu liên tục trong 15 giây
+      var ringCount=0;
+      timerRing();
+      timerRingInterval=setInterval(function(){
+        ringCount++;
+        if(ringCount>=5){clearInterval(timerRingInterval);timerRingInterval=null;return;}
+        timerRing();
+      },3000);
     }
   },1000);
 }
@@ -2589,7 +2604,9 @@ function timerPause(){
   getEl('timerStatus').textContent='⏸ Đã tạm dừng — nhấn Tiếp tục.';
 }
 function timerReset(){
-  clearInterval(timerInterval);timerRunning=false;
+  clearInterval(timerInterval);
+  if(timerRingInterval){clearInterval(timerRingInterval);timerRingInterval=null;}
+  timerRunning=false;
   var mins=parseInt(getEl('timerMinInput').value)||25;
   timerRemaining=mins*60;timerTotal=timerRemaining;
   getEl('timerDisplay').textContent=timerFmt(timerRemaining);
@@ -2601,6 +2618,18 @@ function timerReset(){
   getEl('timerPauseBtn').style.display='none';
   getEl('timerStatus').textContent='Đặt số phút và nhấn Bắt đầu!';
 }
+function timerTickSound(){
+  var c=getAC();if(!c)return;
+  var o=c.createOscillator(),g=c.createGain();
+  o.connect(g);g.connect(c.destination);
+  o.type='square';o.frequency.value=1200;
+  var t=c.currentTime;
+  g.gain.setValueAtTime(0,t);
+  g.gain.linearRampToValueAtTime(.15,t+.01);
+  g.gain.exponentialRampToValueAtTime(.001,t+.06);
+  o.start(t);o.stop(t+.07);
+}
+
 function timerRing(){
   var c=getAC();if(!c)return;
   var seq=[
