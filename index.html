@@ -598,6 +598,21 @@ select option{background:#0c0c1e;}
   background:rgba(255,107,0,.07);color:rgba(255,180,100,.7);
   font-family:'Space Mono',monospace;font-size:10px;cursor:pointer;transition:all .2s;}
 .timer-preset:hover{border-color:rgba(255,107,0,.55);color:#ff8c42;background:rgba(255,107,0,.15);}
+
+/* No-motion mode: bấm là hiện ngay, không chạy animation/transition. */
+*,*::before,*::after{
+  animation:none!important;
+  transition:none!important;
+  scroll-behavior:auto!important;
+}
+.pnl,.modal,.toast,.abanner,.ti.rng,.timer-display.urgent,.timer-display.done{
+  animation:none!important;
+}
+.tb:hover,.btn:hover,.bc:hover,.bpk:hover,.byl:hover,.bgn:hover,.bpu:hover,
+.mc:hover,.mgc:hover,.mood-btn:hover,.timer-btn-start:hover,.timer-btn-pause:hover,
+.timer-preset:hover{
+  transform:none!important;
+}
 </style>
 </head>
 <body>
@@ -807,7 +822,8 @@ select option{background:#0c0c1e;}
   </div>
 
   <div class="tabs">
-    <button class="tb act" onclick="switchTab('day',this)">📅 Ngày</button>
+    <button class="tb act" onclick="switchTab('home',this)">🏠 Nguyên tắc</button>
+    <button class="tb" onclick="switchTab('day',this)">📅 Ngày</button>
     <button class="tb" onclick="switchTab('month',this)">🗓️ Tháng</button>
     <button class="tb" onclick="switchTab('year',this)">🌟 Năm</button>
     <button class="tb" onclick="switchTab('wheel',this)" id="tbWheel">🎡 Quay</button>
@@ -818,8 +834,85 @@ select option{background:#0c0c1e;}
     </div>
   </div>
 
+  <!-- ══ TAB HOME (NGUYÊN TẮC BẢN THÂN) ══ -->
+  <div class="pnl act" id="pnl-home">
+    <!-- Header summary banner -->
+    <div class="card kgreen" style="background:linear-gradient(135deg,rgba(57,255,20,.07),rgba(0,245,255,.04));border-color:rgba(57,255,20,.28);margin-bottom:14px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div>
+          <div class="ct gn" style="font-size:17px;margin-bottom:5px;letter-spacing:2px;">🧭 NGUYÊN TẮC BẢN THÂN</div>
+          <div style="color:var(--mut);font-size:12px;font-family:'Space Mono',monospace;letter-spacing:1px;line-height:1.5;">
+            Kim chỉ nam định hình tư duy, kỷ luật và hành động mỗi ngày.
+          </div>
+        </div>
+        <div class="srow" style="margin-bottom:0;gap:8px;">
+          <div class="sb" style="min-width:70px;padding:8px 12px;border-color:rgba(57,255,20,.25);">
+            <div class="sv" id="prCount" style="color:var(--c4);font-size:20px;">0</div>
+            <div class="sl">Nguyên tắc</div>
+          </div>
+          <div class="sb" style="min-width:70px;padding:8px 12px;border-color:rgba(255,225,0,.25);">
+            <div class="sv" id="prCoreCount" style="color:var(--c3);font-size:20px;">0</div>
+            <div class="sl">Cốt lõi ⭐</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form Add/Edit Principle -->
+    <div class="card kgreen">
+      <div class="ct gn" id="prFormTitle">⚡ THÊM NGUYÊN TẮC MỚI</div>
+      <input type="hidden" id="prEditId" value="" />
+      <div class="fr">
+        <div class="fg" style="flex:2;min-width:220px;">
+          <label class="fl">Nội dung nguyên tắc *</label>
+          <input type="text" id="prInput" placeholder="Ví dụ: Giữ kỷ luật tự giác, tập trung vào giải pháp..." />
+        </div>
+        <div class="fg" style="max-width:145px;">
+          <label class="fl">Chủ đề / Nhóm</label>
+          <select id="prCat">
+            <option value="discipline">🎯 Kỷ luật</option>
+            <option value="mindset">💡 Tư duy</option>
+            <option value="action">⚡ Hành động</option>
+            <option value="time">⏰ Thời gian</option>
+            <option value="health">💪 Sức khỏe</option>
+            <option value="growth">📚 Phát triển</option>
+            <option value="responsibility">🧭 Trách nhiệm</option>
+            <option value="relation">❤️ Ứng xử</option>
+          </select>
+        </div>
+        <div class="fg" style="max-width:130px;">
+          <label class="fl">Đánh dấu</label>
+          <select id="prPinned">
+            <option value="1">⭐ Cốt lõi</option>
+            <option value="0" selected>Thường</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:6px;">
+        <button class="btn bgn" id="prSaveBtn" style="flex:1;" onclick="savePrinciple()">✦ THÊM NGUYÊN TẮC</button>
+        <button class="btn bgh" id="prCancelBtn" style="display:none;" onclick="cancelEditPrinciple()">✕ Hủy sửa</button>
+      </div>
+    </div>
+
+    <!-- Principle List with filter -->
+    <div class="card kgreen">
+      <div class="ct gn" style="justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <span>📜 DANH SÁCH NGUYÊN TẮC</span>
+        <div class="pills" id="prFilterPills">
+          <span class="pill on" onclick="filterPrinciples('all',this)">Tất cả</span>
+          <span class="pill" onclick="filterPrinciples('core',this)">⭐ Cốt lõi</span>
+          <span class="pill" onclick="filterPrinciples('discipline',this)">🎯 Kỷ luật</span>
+          <span class="pill" onclick="filterPrinciples('mindset',this)">💡 Tư duy</span>
+          <span class="pill" onclick="filterPrinciples('action',this)">⚡ Hành động</span>
+          <span class="pill" onclick="filterPrinciples('growth',this)">📚 Phát triển</span>
+        </div>
+      </div>
+      <div id="principleList" style="display:flex;flex-direction:column;gap:9px;margin-top:10px;"></div>
+    </div>
+  </div>
+
   <!-- ══ TAB NGÀY ══ -->
-  <div class="pnl act" id="pnl-day">
+  <div class="pnl" id="pnl-day">
     <!-- STREAK CARD -->
     <div class="streak-card" id="streakCard">
       <div class="streak-top">
@@ -1155,8 +1248,8 @@ select option{background:#0c0c1e;}
 (function(){
   var c=document.getElementById('sc'),x=c.getContext('2d'),s=[];
   function rsz(){c.width=innerWidth;c.height=innerHeight;s=[];for(var i=0;i<160;i++)s.push({x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*.75+.18,a:Math.random(),da:(Math.random()-.5)*.005});}
-  function draw(){x.clearRect(0,0,c.width,c.height);for(var i=0;i<s.length;i++){var t=s[i];t.a+=t.da;if(t.a<0||t.a>1)t.da*=-1;x.beginPath();x.arc(t.x,t.y,t.r,0,Math.PI*2);x.fillStyle='rgba(200,225,255,'+t.a*.6+')';x.fill();}requestAnimationFrame(draw);}
-  addEventListener('resize',rsz);rsz();draw();
+  function draw(){x.clearRect(0,0,c.width,c.height);for(var i=0;i<s.length;i++){var t=s[i];x.beginPath();x.arc(t.x,t.y,t.r,0,Math.PI*2);x.fillStyle='rgba(200,225,255,'+t.a*.6+')';x.fill();}}
+  addEventListener('resize',function(){rsz();draw();});rsz();draw();
 })();
 
 // ═══ CONSTANTS ═══
@@ -1187,7 +1280,8 @@ var D={tasks:{},dayNotes:{},monthGoals:{},yearGoals:{},habits:{},moods:{},monthR
   streak:{count:0,best:0,lastDate:'',history:[]},
   tickets:0,
   spinHistory:[],
-  prizes:[]
+  prizes:[],
+  principles:[]
 };
 
 function loadD(){
@@ -1199,7 +1293,7 @@ function loadD(){
   try{
     if(window.storage&&window.storage.get){
       window.storage.get(SK).then(function(r){
-        if(r&&r.value){var parsed=JSON.parse(r.value);Object.keys(parsed).forEach(function(k){D[k]=parsed[k];});renderTasks();}
+        if(r&&r.value){var parsed=JSON.parse(r.value);Object.keys(parsed).forEach(function(k){D[k]=parsed[k];});renderTasks();renderPrinciples();}
       }).catch(function(){});
     }
   }catch(e){}
@@ -1223,7 +1317,7 @@ function showToast(title,msg){
   var t=document.createElement('div');t.className='toast';
   t.innerHTML='<div class="t-ico">🔔</div><div><div class="t-t">'+title+'</div><div class="t-m">'+msg+'</div></div>';
   cont.appendChild(t);
-  setTimeout(function(){t.style.animation='tout .36s ease forwards';setTimeout(function(){if(t.parentNode)t.remove();},360);},5500);
+  setTimeout(function(){if(t.parentNode)t.remove();},5500);
 }
 
 // ═══ AUDIO ═══
@@ -1351,8 +1445,7 @@ function showAlarmBanner(task){
 function removeAlarmBanner(taskId){
   var el=getEl('ab-'+taskId);
   if(!el)return;
-  el.style.animation='ab-out .35s ease forwards';
-  setTimeout(function(){if(el.parentNode)el.remove();},340);
+  if(el.parentNode)el.remove();
 }
 
 // Nhấn nút HOÀN THÀNH từ banner (không cần vào tab)
@@ -1399,6 +1492,7 @@ function switchTab(name,el){
   document.querySelectorAll('.pnl').forEach(function(p){p.classList.remove('act');});
   el.classList.add('act');
   getEl('pnl-'+name).classList.add('act');
+  if(name==='home')renderPrinciples();
   if(name==='month')renderMonth();
   if(name==='year')renderYear();
   if(name==='wheel'){renderWheelTickets();}
@@ -2444,43 +2538,16 @@ function spinWheel(){
   wheelSpinning=true;
   D.tickets--;saveD();updateTicketDisplay();
   getEl('spinBtn').disabled=true;
-  getEl('wheelResult').innerHTML='<div style="color:var(--c3);font-family:Orbitron,monospace;font-size:12px;letter-spacing:2px;animation:flk 0.5s infinite;">🎡 ĐANG QUAY...</div>';
 
   var chosen = Math.floor(Math.random() * prizes.length);
 
   var n=prizes.length;
   var arc=(2*Math.PI)/n;
-  // Pointer (▼) is at the TOP of the canvas = angle -π/2 in canvas coords.
-  // Segment i center is at: wheelAngle + i*arc + arc/2
-  // We want: finalAngle + chosen*arc + arc/2 = -π/2
-  // => finalAngle = -π/2 - arc/2 - chosen*arc
   var targetSegCenter=-(Math.PI/2+arc/2+chosen*arc);
-  var spins=5+Math.floor(Math.random()*4);
-  var delta=targetSegCenter-wheelAngle;
-  // Normalise so delta is always positive (wheel spins forward)
-  delta=((delta%(2*Math.PI))+(2*Math.PI))%(2*Math.PI);
-  var totalRotation=delta+spins*2*Math.PI;
-
-  var startAngle=wheelAngle;
-  var duration=3500+Math.random()*1000;
-  var startTime=null;
-
-  function easeOut(t){return 1-Math.pow(1-t,4);}
-  function animate(ts){
-    if(!startTime)startTime=ts;
-    var elapsed=ts-startTime;
-    var progress=Math.min(elapsed/duration,1);
-    var curr=startAngle+totalRotation*easeOut(progress);
-    drawWheel(curr);
-    if(progress<1){requestAnimationFrame(animate);}
-    else{
-      wheelSpinning=false;
-      wheelAngle=((startAngle+totalRotation)%(2*Math.PI));
-      drawWheel(wheelAngle);
-      onSpinDone(prizes[chosen]);
-    }
-  }
-  requestAnimationFrame(animate);
+  wheelAngle=((targetSegCenter%(2*Math.PI))+(2*Math.PI))%(2*Math.PI);
+  drawWheel(wheelAngle);
+  wheelSpinning=false;
+  onSpinDone(prizes[chosen]);
 }
 
 function onSpinDone(prize){
@@ -2649,6 +2716,215 @@ function timerRing(){
   });
 }
 
+// ═══ NGUYÊN TẮC BẢN THÂN (PRINCIPLES) ═══
+var DEFAULT_PRINCIPLES = [
+  { id: 'p1', text: 'Luôn giữ kỷ luật cá nhân trong mọi hoàn cảnh.', cat: 'discipline', pinned: true },
+  { id: 'p2', text: 'Hành động dứt khoát bất chấp sự trì hoãn và nỗi sợ hãi.', cat: 'action', pinned: true },
+  { id: 'p3', text: 'Tôn trọng thời gian của bản thân và người khác — không lãng phí từng giây.', cat: 'time', pinned: false },
+  { id: 'p4', text: 'Không ngừng học hỏi, rèn luyện và nâng cấp tư duy mỗi ngày.', cat: 'growth', pinned: true },
+  { id: 'p5', text: 'Tập trung 100% vào giải pháp thay vì than phiền hay viện cớ.', cat: 'mindset', pinned: false },
+  { id: 'p6', text: 'Chịu trách nhiệm 100% cho mọi quyết định và kết quả cuộc đời mình.', cat: 'responsibility', pinned: true }
+];
+
+var PR_CATS = {
+  discipline: { label: '🎯 Kỷ luật', color: 'rgba(57,255,20,.15)', text: 'var(--c4)', bdr: 'rgba(57,255,20,.35)' },
+  mindset: { label: '💡 Tư duy', color: 'rgba(0,245,255,.12)', text: 'var(--c1)', bdr: 'rgba(0,245,255,.3)' },
+  action: { label: '⚡ Hành động', color: 'rgba(255,107,53,.15)', text: 'var(--c5)', bdr: 'rgba(255,107,53,.35)' },
+  time: { label: '⏰ Thời gian', color: 'rgba(255,225,0,.12)', text: 'var(--c3)', bdr: 'rgba(255,225,0,.3)' },
+  health: { label: '💪 Sức khỏe', color: 'rgba(57,255,20,.12)', text: 'var(--c4)', bdr: 'rgba(57,255,20,.3)' },
+  growth: { label: '📚 Phát triển', color: 'rgba(168,85,247,.15)', text: 'var(--c6)', bdr: 'rgba(168,85,247,.35)' },
+  responsibility: { label: '🧭 Trách nhiệm', color: 'rgba(255,0,200,.12)', text: 'var(--c2)', bdr: 'rgba(255,0,200,.3)' },
+  relation: { label: '❤️ Ứng xử', color: 'rgba(255,68,102,.12)', text: 'var(--red)', bdr: 'rgba(255,68,102,.3)' }
+};
+
+var prFilter = 'all';
+
+function initPrinciples(){
+  if(!D.principles || !Array.isArray(D.principles) || !D.principles.length){
+    D.principles = JSON.parse(JSON.stringify(DEFAULT_PRINCIPLES));
+  }
+}
+
+function filterPrinciples(filter, el){
+  prFilter = filter;
+  var container = getEl('prFilterPills');
+  if(container){
+    container.querySelectorAll('.pill').forEach(function(p){ p.classList.remove('on'); });
+  }
+  if(el) el.classList.add('on');
+  renderPrinciples();
+}
+
+function renderPrinciples(){
+  initPrinciples();
+  var list = D.principles || [];
+  var total = list.length;
+  var coreCount = list.filter(function(p){ return p.pinned; }).length;
+  setText('prCount', total);
+  setText('prCoreCount', coreCount);
+
+  var filtered = list.filter(function(p){
+    if(prFilter === 'all') return true;
+    if(prFilter === 'core') return !!p.pinned;
+    return p.cat === prFilter;
+  });
+
+  // Sort pinned first, then by position/creation
+  filtered.sort(function(a,b){
+    if(a.pinned && !b.pinned) return -1;
+    if(!a.pinned && b.pinned) return 1;
+    return 0;
+  });
+
+  var container = getEl('principleList');
+  if(!container) return;
+
+  if(!filtered.length){
+    container.innerHTML = '<div class="es" style="padding:24px 10px;"><div class="ei">🧭</div><div class="et">Chưa có nguyên tắc nào trong nhóm này — hãy thêm ngay!</div></div>';
+    return;
+  }
+
+  var html = '';
+  filtered.forEach(function(p, idx){
+    var catInfo = PR_CATS[p.cat] || { label: '⭐ Nguyên tắc', color: 'rgba(0,245,255,.1)', text: 'var(--c1)', bdr: 'rgba(0,245,255,.25)' };
+    var isCore = !!p.pinned;
+    html += '<div class="ti" style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:13px 14px;background:rgba(0,0,0,.35);border:1px solid ' + (isCore ? 'rgba(57,255,20,.35)' : 'rgba(255,255,255,.08)') + ';border-radius:12px;position:relative;' + (isCore ? 'box-shadow:0 0 12px rgba(57,255,20,.08);' : '') + '">';
+    
+    // Left: Index & Pin star button
+    html += '<div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0;">';
+    html += '  <div style="width:26px;height:26px;border-radius:8px;background:' + (isCore ? 'rgba(57,255,20,.15)' : 'rgba(255,255,255,.05)') + ';border:1px solid ' + (isCore ? 'var(--c4)' : 'rgba(255,255,255,.15)') + ';display:flex;align-items:center;justify-content:center;font-family:\'Orbitron\',monospace;font-size:11px;font-weight:700;color:' + (isCore ? 'var(--c4)' : 'var(--mut)') + ';">' + (idx + 1) + '</div>';
+    html += '  <button title="' + (isCore ? 'Bỏ ghim cốt lõi' : 'Đánh dấu cốt lõi') + '" onclick="togglePinPrinciple(\'' + p.id + '\')" style="background:none;border:none;cursor:pointer;font-size:14px;line-height:1;color:' + (isCore ? '#ffe100' : 'rgba(255,255,255,.25)') + ';transition:all .2s;">' + (isCore ? '⭐' : '☆') + '</button>';
+    html += '</div>';
+
+    // Mid: Content & Tag
+    html += '<div style="flex:1;min-width:0;">';
+    html += '  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">';
+    html += '    <span class="tag" style="background:' + catInfo.color + ';color:' + catInfo.text + ';border:1px solid ' + catInfo.bdr + ';font-size:10px;padding:2px 8px;border-radius:20px;">' + catInfo.label + '</span>';
+    if(isCore){
+      html += '    <span style="font-family:\'Space Mono\',monospace;font-size:9px;color:#ffe100;background:rgba(255,225,0,.1);border:1px solid rgba(255,225,0,.25);padding:1px 6px;border-radius:10px;">CỐT LÕI</span>';
+    }
+    html += '  </div>';
+    html += '  <div style="font-size:14px;color:var(--txt);line-height:1.6;font-weight:500;word-break:break-word;">' + esc(p.text) + '</div>';
+    html += '</div>';
+
+    // Right: Actions
+    html += '<div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;margin-left:4px;">';
+    html += '  <button class="btn byl bxs" onclick="editPrinciple(\'' + p.id + '\')" title="Chỉnh sửa nguyên tắc">✏️ Sửa</button>';
+    html += '  <button class="btn bdel bxs" onclick="deletePrinciple(\'' + p.id + '\')" title="Xóa nguyên tắc">✕ Xóa</button>';
+    html += '</div>';
+
+    html += '</div>';
+  });
+
+  container.innerHTML = html;
+}
+
+function savePrinciple(){
+  var text = getVal('prInput').trim();
+  if(!text){
+    flashEl('prInput');
+    return;
+  }
+  var cat = getVal('prCat') || 'discipline';
+  var pinned = getVal('prPinned') === '1';
+  var editId = getVal('prEditId');
+
+  initPrinciples();
+
+  if(editId){
+    var item = null;
+    for(var i=0; i<D.principles.length; i++){
+      if(D.principles[i].id === editId){ item = D.principles[i]; break; }
+    }
+    if(item){
+      item.text = text;
+      item.cat = cat;
+      item.pinned = pinned;
+      showToast('✏️ Đã cập nhật', 'Nguyên tắc đã được chỉnh sửa.');
+    }
+    cancelEditPrinciple();
+  } else {
+    D.principles.push({
+      id: uid(),
+      text: text,
+      cat: cat,
+      pinned: pinned
+    });
+    setVal('prInput', '');
+    showToast('✦ Đã thêm nguyên tắc', 'Nguyên tắc mới đã được lưu vào hệ thống.');
+    playAdd();
+  }
+
+  saveD();
+  renderPrinciples();
+}
+
+function editPrinciple(id){
+  initPrinciples();
+  var item = null;
+  for(var i=0; i<D.principles.length; i++){
+    if(D.principles[i].id === id){ item = D.principles[i]; break; }
+  }
+  if(!item) return;
+
+  setVal('prEditId', item.id);
+  setVal('prInput', item.text);
+  setVal('prCat', item.cat || 'discipline');
+  setVal('prPinned', item.pinned ? '1' : '0');
+
+  setText('prFormTitle', '✏️ CHỈNH SỬA NGUYÊN TẮC');
+  setText('prSaveBtn', '✦ LƯU THAY ĐỔI');
+  getEl('prCancelBtn').style.display = '';
+
+  var inp = getEl('prInput');
+  if(inp){
+    inp.focus();
+    inp.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+function cancelEditPrinciple(){
+  setVal('prEditId', '');
+  setVal('prInput', '');
+  setVal('prCat', 'discipline');
+  setVal('prPinned', '0');
+
+  setText('prFormTitle', '⚡ THÊM NGUYÊN TẮC MỚI');
+  setText('prSaveBtn', '✦ THÊM NGUYÊN TẮC');
+  getEl('prCancelBtn').style.display = 'none';
+}
+
+function togglePinPrinciple(id){
+  initPrinciples();
+  for(var i=0; i<D.principles.length; i++){
+    if(D.principles[i].id === id){
+      D.principles[i].pinned = !D.principles[i].pinned;
+      showToast(D.principles[i].pinned ? '⭐ Ghim cốt lõi' : '☆ Bỏ ghim cốt lõi', D.principles[i].text.slice(0, 30) + '...');
+      break;
+    }
+  }
+  saveD();
+  renderPrinciples();
+}
+
+function deletePrinciple(id){
+  initPrinciples();
+  var item = null;
+  for(var i=0; i<D.principles.length; i++){
+    if(D.principles[i].id === id){ item = D.principles[i]; break; }
+  }
+  if(!confirm('Bạn có chắc muốn xóa nguyên tắc này không?\n\n"' + (item ? item.text : '') + '"')) return;
+
+  if(getVal('prEditId') === id){
+    cancelEditPrinciple();
+  }
+
+  D.principles = D.principles.filter(function(p){ return p.id !== id; });
+  saveD();
+  renderPrinciples();
+  showToast('🗑️ Đã xóa', 'Nguyên tắc đã được gỡ bỏ.');
+}
+
 // ═══ ENTER KEY ═══
 document.addEventListener('keydown',function(e){
   if(e.key==='Enter'&&!e.shiftKey){
@@ -2658,6 +2934,7 @@ document.addEventListener('keydown',function(e){
     else if(getEl('moMet').classList.contains('open'))saveMet();
     else if(getEl('moRev').classList.contains('open')){}
     else if(document.activeElement&&document.activeElement.id==='tName')addTask();
+    else if(document.activeElement&&document.activeElement.id==='prInput')savePrinciple();
   }
 });
 
@@ -2667,15 +2944,15 @@ if(!D.streak)D.streak={count:0,best:0,lastDate:'',history:[]};
 if(!D.tickets)D.tickets=0;
 if(!D.spinHistory)D.spinHistory=[];
 if(!D.prizes||!D.prizes.length)D.prizes=JSON.parse(JSON.stringify(DEFAULT_PRIZES));
+initPrinciples();
+renderPrinciples();
 renderTasks();
 initCal();
-setTimeout(function(){
-  var c=getEl('wheelCanvas');if(c)drawWheel(0);
-  updateTicketDisplay();
-  renderStreakUI();
-  timerRemaining=25*60;timerTotal=timerRemaining;
-  if(getEl('timerDisplay'))getEl('timerDisplay').textContent=timerFmt(timerRemaining);
-},100);
+var c=getEl('wheelCanvas');if(c)drawWheel(0);
+updateTicketDisplay();
+renderStreakUI();
+timerRemaining=25*60;timerTotal=timerRemaining;
+if(getEl('timerDisplay'))getEl('timerDisplay').textContent=timerFmt(timerRemaining);
 </script>
 </body>
 </html>

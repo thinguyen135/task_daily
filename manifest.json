@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "Nova Planner",
+  "description": "Planner cá nhân dạng popup với mục tiêu ngày, tháng, năm, vòng quay và nhắc việc.",
+  "version": "1.1.0",
+  "action": {
+    "default_title": "Mở Nova Planner",
+    "default_popup": "extension-shell.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": [
+    "alarms",
+    "notifications",
+    "storage"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_security_policy": {
+    "sandbox": "sandbox allow-scripts allow-forms allow-popups allow-modals allow-downloads; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; child-src 'self';"
+  },
+  "sandbox": {
+    "pages": [
+      "app/index.html"
+    ]
+  }
+}

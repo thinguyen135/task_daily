@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nova Planner</title>
+  <link rel="stylesheet" href="popup.css">
+  <script src="popup.js" defer></script>
+</head>
+<body>
+  <canvas id="stars-canvas" aria-hidden="true"></canvas>
+  <div id="toast-container"></div>
+
+  <div class="modal-overlay" id="yearModal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="yearModalTitle">
+      <div class="modal-title" id="yearModalTitle">THÁNG 1</div>
+      <button class="modal-close" id="closeYearModalBtn" type="button" aria-label="Đóng">x</button>
+      <div class="form-group modal-goal-form">
+        <label class="form-label" for="yearGoalInput">Thêm mục tiêu cho tháng này</label>
+        <input type="text" id="yearGoalInput" placeholder="Nhập mục tiêu của bạn...">
+      </div>
+      <button class="btn btn-primary full-button modal-save-btn" id="saveYearGoalBtn" type="button">Lưu mục tiêu</button>
+      <div id="yearGoalList" class="task-list"></div>
+    </div>
+  </div>
+
+  <main class="app-wrap">
+    <header class="header">
+      <div class="header-logo">Nova Planner</div>
+      <div class="header-sub">Kế hoạch của bạn · Tương lai của bạn</div>
+      <div class="clock-display" id="clockDisplay">00:00:00</div>
+      <div class="date-display" id="dateDisplay"></div>
+    </header>
+
+    <nav class="tabs" aria-label="Chế độ lập kế hoạch">
+      <button class="tab-btn active" type="button" data-tab="day">Ngày</button>
+      <button class="tab-btn" type="button" data-tab="month">Tháng</button>
+      <button class="tab-btn" type="button" data-tab="year">Năm</button>
+    </nav>
+
+    <section class="panel active" id="panel-day">
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="stat-val" id="statTotal">0</div>
+          <div class="stat-label">Tổng việc</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val stat-success" id="statDone">0</div>
+          <div class="stat-label">Hoàn thành</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val stat-accent" id="statLeft">0</div>
+          <div class="stat-label">Còn lại</div>
+        </div>
+      </div>
+
+      <div class="card compact-card">
+        <div class="progress-label">
+          <span>Tiến độ hôm nay</span>
+          <span id="progressPct">0%</span>
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span class="icon">⚡</span> Thêm mục tiêu ngày</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="taskName">Tên mục tiêu</label>
+            <input type="text" id="taskName" placeholder="Ví dụ: Học tiếng Anh...">
+          </div>
+          <div class="form-group time-field">
+            <label class="form-label" for="taskTime">Thời gian báo</label>
+            <input type="time" id="taskTime">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="taskDesc">Mô tả</label>
+            <input type="text" id="taskDesc" placeholder="Thêm mô tả...">
+          </div>
+          <div class="form-group priority-field">
+            <label class="form-label" for="taskPriority">Ưu tiên</label>
+            <select id="taskPriority">
+              <option value="high">Cao</option>
+              <option value="med" selected>Trung bình</option>
+              <option value="low">Thấp</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary full-button" id="addTaskBtn" type="button">Thêm mục tiêu</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span class="icon">🎯</span> Mục tiêu hôm nay</div>
+        <div class="task-list" id="taskList"></div>
+      </div>
+    </section>
+
+    <section class="panel" id="panel-month">
+      <div class="card">
+        <div class="cal-nav">
+          <button class="btn btn-primary btn-sm" id="prevMonthBtn" type="button">Trước</button>
+          <div class="cal-nav-title" id="calTitle"></div>
+          <button class="btn btn-primary btn-sm" id="nextMonthBtn" type="button">Sau</button>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+      </div>
+
+      <div class="card month-note-panel" id="monthNotePanel">
+        <div class="month-note-date" id="monthNoteDate"></div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="mTaskName">Tên mục tiêu</label>
+            <input type="text" id="mTaskName" placeholder="Nhiệm vụ cho ngày này...">
+          </div>
+          <div class="form-group time-field">
+            <label class="form-label" for="mTaskTime">Giờ báo thức</label>
+            <input type="time" id="mTaskTime">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="mTaskDesc">Mô tả chi tiết</label>
+            <input type="text" id="mTaskDesc" placeholder="Ghi chú thêm...">
+          </div>
+          <div class="form-group priority-field">
+            <label class="form-label" for="mTaskPriority">Ưu tiên</label>
+            <select id="mTaskPriority">
+              <option value="high">Cao</option>
+              <option value="med" selected>Trung bình</option>
+              <option value="low">Thấp</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary full-button month-add-btn" id="addMonthTaskBtn" type="button">Lên kế hoạch</button>
+        <div class="task-list" id="monthTaskList"></div>
+      </div>
+    </section>
+
+    <section class="panel" id="panel-year">
+      <div class="card">
+        <div class="year-nav">
+          <button class="btn btn-primary btn-sm icon-only" id="prevYearBtn" type="button" aria-label="Năm trước">‹</button>
+          <div class="year-title" id="yearTitle"></div>
+          <button class="btn btn-primary btn-sm icon-only" id="nextYearBtn" type="button" aria-label="Năm sau">›</button>
+        </div>
+        <div class="year-months" id="yearMonths"></div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
