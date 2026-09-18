@@ -2526,40 +2526,44 @@ function spinWheel(){
   D.tickets--;saveD();updateTicketDisplay();
   getEl('spinBtn').disabled=true;
 
-  var chosen = Math.floor(Math.random() * prizes.length);
+  var chosen=Math.floor(Math.random()*prizes.length);
   var n=prizes.length;
   var arc=(2*Math.PI)/n;
-  var targetSegCenter=-(Math.PI/2+arc/2+chosen*arc);
-  var finalAngle=((targetSegCenter%(2*Math.PI))+(2*Math.PI))%(2*Math.PI);
-  
-  var spins = 10;
-  var totalRotation = spins * 2 * Math.PI + finalAngle - (wheelAngle % (2 * Math.PI));
-  if (totalRotation < spins * 2 * Math.PI) totalRotation += 2 * Math.PI;
-  
-  var startAngle = wheelAngle;
-  var startTime = null;
-  var duration = 4000; // 4 seconds animation
 
-  function animate(time) {
-    if (!startTime) startTime = time;
-    var progress = (time - startTime) / duration;
-    if (progress > 1) progress = 1;
-    
-    // Easing function (easeOutCubic)
-    var easeOut = 1 - Math.pow(1 - progress, 3);
-    wheelAngle = startAngle + totalRotation * easeOut;
-    drawWheel(wheelAngle);
-    
-    if (progress < 1) {
-      requestAnimationFrame(animate);
-    } else {
-      wheelAngle = finalAngle;
+  // Tính góc đích để ô được chọn nằm ngay dưới mũi tên (top = -PI/2)
+  var targetAngle=-(Math.PI/2+arc/2+chosen*arc);
+  // Chuẩn hóa về [0, 2PI]
+  targetAngle=((targetAngle%(2*Math.PI))+(2*Math.PI))%(2*Math.PI);
+
+  // Bắt đầu từ góc hiện tại (chuẩn hóa)
+  var currentAngle=((wheelAngle%(2*Math.PI))+(2*Math.PI))%(2*Math.PI);
+
+  // Tổng góc quay = N vòng + khoảng từ góc hiện tại đến đích
+  var diff=targetAngle-currentAngle;
+  if(diff<0)diff+=2*Math.PI;
+  var totalRad=8*2*Math.PI+diff; // 8 vòng quay
+
+  var elapsed=0;
+  var duration=4000; // ms
+  var fps=60;
+  var interval=1000/fps;
+
+  var spinInterval=setInterval(function(){
+    elapsed+=interval;
+    if(elapsed>=duration){
+      clearInterval(spinInterval);
+      wheelAngle=targetAngle;
       drawWheel(wheelAngle);
       wheelSpinning=false;
       onSpinDone(prizes[chosen]);
+      return;
     }
-  }
-  requestAnimationFrame(animate);
+    var t=elapsed/duration;
+    // easeOutCubic: chậm dần ở cuối
+    var ease=1-Math.pow(1-t,3);
+    wheelAngle=currentAngle+totalRad*ease;
+    drawWheel(wheelAngle);
+  },interval);
 }
 
 function onSpinDone(prize){
