@@ -2540,14 +2540,39 @@ function spinWheel(){
   getEl('spinBtn').disabled=true;
 
   var chosen = Math.floor(Math.random() * prizes.length);
-
   var n=prizes.length;
   var arc=(2*Math.PI)/n;
   var targetSegCenter=-(Math.PI/2+arc/2+chosen*arc);
-  wheelAngle=((targetSegCenter%(2*Math.PI))+(2*Math.PI))%(2*Math.PI);
-  drawWheel(wheelAngle);
-  wheelSpinning=false;
-  onSpinDone(prizes[chosen]);
+  var finalAngle=((targetSegCenter%(2*Math.PI))+(2*Math.PI))%(2*Math.PI);
+  
+  var spins = 10;
+  var totalRotation = spins * 2 * Math.PI + finalAngle - (wheelAngle % (2 * Math.PI));
+  if (totalRotation < spins * 2 * Math.PI) totalRotation += 2 * Math.PI;
+  
+  var startAngle = wheelAngle;
+  var startTime = null;
+  var duration = 4000; // 4 seconds animation
+
+  function animate(time) {
+    if (!startTime) startTime = time;
+    var progress = (time - startTime) / duration;
+    if (progress > 1) progress = 1;
+    
+    // Easing function (easeOutCubic)
+    var easeOut = 1 - Math.pow(1 - progress, 3);
+    wheelAngle = startAngle + totalRotation * easeOut;
+    drawWheel(wheelAngle);
+    
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      wheelAngle = finalAngle;
+      drawWheel(wheelAngle);
+      wheelSpinning=false;
+      onSpinDone(prizes[chosen]);
+    }
+  }
+  requestAnimationFrame(animate);
 }
 
 function onSpinDone(prize){
