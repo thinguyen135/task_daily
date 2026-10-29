@@ -704,9 +704,282 @@
     });
   }
 
+  /* ══════════════════════════════════════════════════════════════
+     POMODORO & WEBSITE BLOCKER
+  ══════════════════════════════════════════════════════════════ */
+  let pomoTimerInterval = null;
+  let pomoTimeLeft = 25 * 60;
+  let pomoMode = "work";
+  let pomoIsRunning = false;
+  let blockedSites = [];
+  let blockerSettings = {
+    blockOnPomo: true,
+    blockOnSchedule: false,
+    startTime: "19:00",
+    endTime: "22:00"
+  };
+
+  const pomoStorage = {
+    get: (keys, callback) => {
+      if (extensionStorageAvailable()) {
+        chrome.storage.local.get(keys, callback);
+      } else {
+        const result = {};
+        keys.forEach((k) => {
+          const val = localStorage.getItem(k);
+          if (val) {
+            try { result[k] = JSON.parse(val); } catch (e) { result[k] = val; }
+          }
+        });
+        callback(result);
+      }
+    },
+    set: (data, callback) => {
+      if (extensionStorageAvailable()) {
+        chrome.storage.local.set(data, callback);
+      }
+      try {
+        Object.keys(data).forEach((k) => {
+          localStorage.setItem(k, JSON.stringify(data[k]));
+        });
+      } catch (e) {}
+      if (callback && !extensionStorageAvailable()) callback();
+    }
+  };
+
+  function formatPomoTime(seconds) {
+    const m = Math.floor(seconds / 60).toString().padStart(2, "0");
+    const s = (seconds % 60).toString().padStart(2, "0");
+    return `${m}:${s}`;
+  }
+
+  function updatePomoUI() {
+    const timerDisplay = $("pomo-timer");
+    const statusDisplay = $("pomo-status");
+    if (timerDisplay) timerDisplay.textContent = formatPomoTime(pomoTimeLeft);
+    if (statusDisplay) {
+      if (pomoIsRunning) {
+        statusDisplay.innerHTML =
+          pomoMode === "work"
+            ? '<span style="color:var(--danger)">🔥 Đang trong giờ học tập (Đã bật chặn web)</span>'
+            : '<span style="color:var(--success)">☕ Đang giờ giải lao (Tạm mở khóa web)</span>';
+      } else {
+        statusDisplay.textContent = "Đã tạm dừng / Sẵn sàng";
+      }
+    }
+  }
+
+  function syncPomoState() {
+    pomoStorage.set({
+      pomoState: {
+        isRunning: pomoIsRunning,
+        currentMode: pomoMode,
+        timeLeft: pomoTimeLeft,
+        updatedAt: Date.now()
+      }
+    });
+  }
+
+  function startPomoTimer() {
+    if (pomoIsRunning) return;
+    pomoIsRunning = true;
+    syncPomoState();
+    updatePomoUI();
+
+    clearInterval(pomoTimerInterval);
+    pomoTimerInterval = setInterval(() => {
+      if (pomoTimeLeft > 0) {
+        pomoTimeLeft--;
+        updatePomoUI();
+        if (pomoTimeLeft % 5 === 0) syncPomoState();
+      } else {
+        clearInterval(pomoTimerInterval);
+        pomoIsRunning = false;
+        playDone();
+        if (pomoMode === "work") {
+          showToast("🎉 Pomodoro Hoàn thành!", "Hãy nghỉ ngơi 5 phút để nạp lại năng lượng nhé.");
+          switchPomoMode("short", 5);
+        } else {
+          showToast("⏰ Hết giờ nghỉ!", "Sẵn sàng quay lại phiên học tập tập trung tiếp theo.");
+          switchPomoMode("work", 25);
+        }
+      }
+    }, 1000);
+  }
+
+  function pausePomoTimer() {
+    clearInterval(pomoTimerInterval);
+    pomoIsRunning = false;
+    syncPomoState();
+    updatePomoUI();
+  }
+
+  function switchPomoMode(mode, minutes) {
+    pausePomoTimer();
+    pomoMode = mode;
+    pomoTimeLeft = minutes * 60;
+    document.querySelectorAll(".mode-btn").forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset.mode === mode);
+    });
+    syncPomoState();
+    updatePomoUI();
+  }
+
+  function extractHostname(inputUrl) {
+    let cleaned = inputUrl.trim().toLowerCase();
+    if (!cleaned) return "";
+    try {
+      if (!cleaned.startsWith("http://") && !cleaned.startsWith("https://")) {
+        cleaned = "https://" + cleaned;
+      }
+      const urlObj = new URL(cleaned);
+      return urlObj.hostname.replace(/^www\./, "");
+    } catch (e) {
+      return cleaned.replace(/^(https?:\/\/)?(www\.)?/, "").split("/")[0].split(":")[0];
+    }
+  }
+
+  function renderBlockedSites() {
+    const listEl = $("blocked-sites-list");
+    if (!listEl) return;
+    listEl.innerHTML = "";
+    if (blockedSites.length === 0) {
+      listEl.innerHTML = '<li style="color:var(--muted); justify-content:center;">Chưa có trang web nào trong danh sách chặn</li>';
+      return;
+    }
+
+    blockedSites.forEach((domain, index) => {
+      const li = document.createElement("li");
+      li.innerHTML = `
+        <span>🌐 <b>${escH(domain)}</b></span>
+        <button class="remove-site-btn" data-index="${index}" title="Xóa">✖</button>
+      `;
+      listEl.appendChild(li);
+    });
+
+    listEl.querySelectorAll(".remove-site-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const idx = parseInt(e.target.getAttribute("data-index"), 10);
+        blockedSites.splice(idx, 1);
+        pomoStorage.set({ blockedSites }, () => renderBlockedSites());
+      });
+    });
+  }
+
+  function addBlockedDomain(raw) {
+    const domain = extractHostname(raw);
+    if (!domain) return;
+    if (!blockedSites.includes(domain)) {
+      blockedSites.push(domain);
+      pomoStorage.set({ blockedSites }, () => {
+        if ($("block-url-input")) $("block-url-input").value = "";
+        renderBlockedSites();
+        showToast("Đã thêm trang web", `Chặn: ${domain}`);
+      });
+    } else {
+      if ($("block-url-input")) $("block-url-input").value = "";
+      showToast("Thông báo", `${domain} đã có trong danh sách chặn.`);
+    }
+  }
+
+  function saveBlockerSettings() {
+    blockerSettings = {
+      blockOnPomo: $("block-on-pomo") ? $("block-on-pomo").checked : true,
+      blockOnSchedule: $("block-on-schedule") ? $("block-on-schedule").checked : false,
+      startTime: $("study-start-time") ? $("study-start-time").value || "19:00" : "19:00",
+      endTime: $("study-end-time") ? $("study-end-time").value || "22:00" : "22:00"
+    };
+    pomoStorage.set({ blockerSettings });
+  }
+
+  function initPomoAndBlocker() {
+    document.querySelectorAll(".mode-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        switchPomoMode(btn.dataset.mode, parseInt(btn.dataset.time, 10));
+      });
+    });
+
+    if ($("pomo-start-btn")) $("pomo-start-btn").addEventListener("click", startPomoTimer);
+    if ($("pomo-pause-btn")) $("pomo-pause-btn").addEventListener("click", pausePomoTimer);
+    if ($("pomo-reset-btn")) {
+      $("pomo-reset-btn").addEventListener("click", () => {
+        const activeBtn = document.querySelector(".mode-btn.active");
+        const defaultMin = activeBtn ? parseInt(activeBtn.dataset.time, 10) : 25;
+        switchPomoMode(pomoMode, defaultMin);
+      });
+    }
+
+    if ($("block-on-pomo")) $("block-on-pomo").addEventListener("change", saveBlockerSettings);
+    if ($("block-on-schedule")) $("block-on-schedule").addEventListener("change", saveBlockerSettings);
+    if ($("save-schedule-btn")) {
+      $("save-schedule-btn").addEventListener("click", () => {
+        saveBlockerSettings();
+        showToast("Cài đặt giờ", "Đã lưu khung giờ học tập!");
+      });
+    }
+
+    if ($("add-block-url-btn")) {
+      $("add-block-url-btn").addEventListener("click", () => {
+        const val = $("block-url-input") ? $("block-url-input").value : "";
+        addBlockedDomain(val);
+      });
+    }
+
+    if ($("block-url-input")) {
+      $("block-url-input").addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          if ($("add-block-url-btn")) $("add-block-url-btn").click();
+        }
+      });
+    }
+
+    document.querySelectorAll(".preset-chip").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        const domain = chip.dataset.domain;
+        if (domain) addBlockedDomain(domain);
+      });
+    });
+
+    pomoStorage.get(["blockedSites", "blockerSettings", "pomoState"], (res) => {
+      blockedSites = res.blockedSites || [];
+      renderBlockedSites();
+
+      if (res.blockerSettings) {
+        blockerSettings = res.blockerSettings;
+        if ($("block-on-pomo")) $("block-on-pomo").checked = blockerSettings.blockOnPomo ?? true;
+        if ($("block-on-schedule")) $("block-on-schedule").checked = blockerSettings.blockOnSchedule ?? false;
+        if ($("study-start-time")) $("study-start-time").value = blockerSettings.startTime || "19:00";
+        if ($("study-end-time")) $("study-end-time").value = blockerSettings.endTime || "22:00";
+      }
+
+      if (res.pomoState) {
+        pomoMode = res.pomoState.currentMode || "work";
+        document.querySelectorAll(".mode-btn").forEach((b) => {
+          b.classList.toggle("active", b.dataset.mode === pomoMode);
+        });
+
+        if (res.pomoState.isRunning) {
+          const elapsed = Math.floor((Date.now() - (res.pomoState.updatedAt || Date.now())) / 1000);
+          pomoTimeLeft = Math.max(0, (res.pomoState.timeLeft || 25 * 60) - elapsed);
+          if (pomoTimeLeft > 0) {
+            startPomoTimer();
+          } else {
+            pomoTimeLeft = 25 * 60;
+            updatePomoUI();
+          }
+        } else {
+          pomoTimeLeft = res.pomoState.timeLeft ?? 25 * 60;
+          updatePomoUI();
+        }
+      }
+    });
+  }
+
   async function init() {
     initStars();
     bindEvents();
+    initPomoAndBlocker();
     await loadData();
     renderTasks();
     initCal();

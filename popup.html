@@ -34,8 +34,7 @@
 
     <nav class="tabs" aria-label="Chế độ lập kế hoạch">
       <button class="tab-btn active" type="button" data-tab="day">Ngày</button>
-      <button class="tab-btn" type="button" data-tab="month">Tháng</button>
-      <button class="tab-btn" type="button" data-tab="year">Năm</button>
+      <button class="tab-btn" type="button" data-tab="pomodoro">🍅 Pomodoro</button>
     </nav>
 
     <section class="panel active" id="panel-day">
@@ -148,6 +147,74 @@
           <button class="btn btn-primary btn-sm icon-only" id="nextYearBtn" type="button" aria-label="Năm sau">›</button>
         </div>
         <div class="year-months" id="yearMonths"></div>
+      </div>
+    </section>
+
+    <section class="panel" id="panel-pomodoro">
+      <!-- Phần 1: Đồng hồ Pomodoro -->
+      <div class="card pomo-card">
+        <div class="pomo-modes">
+          <button class="mode-btn active" data-mode="work" data-time="25" type="button">Học tập (25p)</button>
+          <button class="mode-btn" data-mode="short" data-time="5" type="button">Nghỉ ngắn (5p)</button>
+          <button class="mode-btn" data-mode="long" data-time="15" type="button">Nghỉ dài (15p)</button>
+        </div>
+
+        <div id="pomo-timer" class="pomo-timer">25:00</div>
+        <div id="pomo-status" class="pomo-status">Sẵn sàng tập trung</div>
+
+        <div class="pomo-controls">
+          <button id="pomo-start-btn" class="btn btn-primary" type="button">▶ Bắt đầu</button>
+          <button id="pomo-pause-btn" class="btn btn-secondary" type="button">⏸ Tạm dừng</button>
+          <button id="pomo-reset-btn" class="btn btn-danger" type="button">🔄 Đặt lại</button>
+        </div>
+      </div>
+
+      <!-- Phần 2: Cài đặt Khung giờ học & Chặn trang web -->
+      <div class="card blocker-card">
+        <div class="card-title"><span class="icon">🚫</span> Chặn Web Trong Giờ Học</div>
+        
+        <div class="schedule-box">
+          <label class="checkbox-label">
+            <input type="checkbox" id="block-on-pomo" checked />
+            <span>Tự động chặn khi Pomodoro ở chế độ <b>Học tập</b></span>
+          </label>
+
+          <label class="checkbox-label" style="margin-top: 6px;">
+            <input type="checkbox" id="block-on-schedule" />
+            <span>Chặn theo khung giờ học cố định:</span>
+          </label>
+
+          <div class="time-range">
+            <span>Từ:</span>
+            <input type="time" id="study-start-time" value="19:00" />
+            <span>Đến:</span>
+            <input type="time" id="study-end-time" value="22:00" />
+            <button id="save-schedule-btn" class="btn btn-primary btn-sm" type="button">Lưu giờ</button>
+          </div>
+        </div>
+
+        <div class="quick-presets">
+          <div style="font-size: 11px; color: var(--muted); margin-bottom: 6px;">Gợi ý chặn nhanh các web gây nghiện:</div>
+          <div class="preset-chips">
+            <button class="preset-chip" type="button" data-domain="facebook.com">+ Facebook</button>
+            <button class="preset-chip" type="button" data-domain="youtube.com">+ YouTube</button>
+            <button class="preset-chip" type="button" data-domain="tiktok.com">+ TikTok</button>
+            <button class="preset-chip" type="button" data-domain="instagram.com">+ Instagram</button>
+            <button class="preset-chip" type="button" data-domain="reddit.com">+ Reddit</button>
+            <button class="preset-chip" type="button" data-domain="netflix.com">+ Netflix</button>
+          </div>
+        </div>
+
+        <div class="block-input-group">
+          <input 
+            type="text" 
+            id="block-url-input" 
+            placeholder="Dán link hoặc domain (VD: facebook.com)..." 
+          />
+          <button id="add-block-url-btn" class="btn btn-primary" type="button">+ Thêm</button>
+        </div>
+
+        <ul id="blocked-sites-list" class="blocked-list"></ul>
       </div>
     </section>
   </main>

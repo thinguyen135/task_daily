@@ -599,6 +599,63 @@ select option{background:#0c0c1e;}
   font-family:'Space Mono',monospace;font-size:10px;cursor:pointer;transition:all .2s;}
 .timer-preset:hover{border-color:rgba(255,107,0,.55);color:#ff8c42;background:rgba(255,107,0,.15);}
 
+/* ══ POMODORO & BLOCKER STYLES ══ */
+.tb-pomo {
+  padding: 8px 16px;
+  border: 1px solid rgba(255,255,255,.15);
+  background: rgba(255,255,255,.04);
+  color: var(--mut);
+  font-family: 'Orbitron', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all .25s ease;
+}
+.tb-pomo:hover {
+  background: rgba(255,255,255,.08);
+  color: var(--txt);
+}
+.tb-pomo.act {
+  background: linear-gradient(135deg, rgba(255,68,102,.25), rgba(255,107,53,.2));
+  border-color: var(--red);
+  color: #ff859d;
+  box-shadow: 0 0 14px rgba(255,68,102,.35);
+}
+.tb-chip {
+  padding: 5px 12px;
+  background: rgba(0,245,255,.06);
+  border: 1px solid rgba(0,245,255,.2);
+  color: var(--c1);
+  border-radius: 16px;
+  font-size: 11px;
+  font-family: 'Space Mono', monospace;
+  cursor: pointer;
+  transition: all .2s;
+}
+.tb-chip:hover {
+  background: rgba(0,245,255,.15);
+  border-color: var(--c1);
+  transform: translateY(-1px);
+}
+.blocked-item-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(0,0,0,.35);
+  border: 1px solid rgba(255,68,102,.18);
+  border-radius: 8px;
+  font-size: 13px;
+  transition: border-color .2s;
+}
+.blocked-item-card:hover {
+  border-color: rgba(255,68,102,.45);
+}
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(1.3); }
+}
 
 </style>
 </head>
@@ -811,9 +868,8 @@ select option{background:#0c0c1e;}
   <div class="tabs">
     <button class="tb act" onclick="switchTab('home',this)">🏠 Nguyên tắc</button>
     <button class="tb" onclick="switchTab('day',this)">📅 Ngày</button>
-    <button class="tb" onclick="switchTab('month',this)">🗓️ Tháng</button>
-    <button class="tb" onclick="switchTab('year',this)">🌟 Năm</button>
     <button class="tb" onclick="switchTab('wheel',this)" id="tbWheel">🎡 Quay</button>
+    <button class="tb" onclick="switchTab('pomodoro',this)" id="tbPomo">🍅 Pomodoro</button>
   </div>
   <div style="display:flex;justify-content:flex-end;margin:-8px 0 10px;">
     <div class="ticket-badge" onclick="switchTab('wheel',document.getElementById('tbWheel'))" title="Vé quay thưởng">
@@ -930,10 +986,12 @@ select option{background:#0c0c1e;}
     <div class="card">
       <div class="ct">⚡ THÊM MỤC TIÊU NGÀY</div>
       <div class="fr">
-        <div class="fg"><label class="fl">Tên mục tiêu</label>
+        <div class="fg"><label class="fl">Tên mục tiêu *</label>
           <input type="text" id="tName" placeholder="Học tiếng Anh 30 phút..."/></div>
-        <div class="fg" style="max-width:130px"><label class="fl">Giờ nhắc</label>
-          <input type="time" id="tTime"/></div>
+        <div class="fg" style="max-width:130px"><label class="fl">Giờ bắt đầu *</label>
+          <input type="time" id="tStartTime" required/></div>
+        <div class="fg" style="max-width:130px"><label class="fl">Giờ kết thúc *</label>
+          <input type="time" id="tEndTime" required/></div>
       </div>
       <div class="fr">
         <div class="fg"><label class="fl">Mô tả (tùy chọn)</label>
@@ -1135,6 +1193,112 @@ select option{background:#0c0c1e;}
         </label>
       </div>
       <button class="btn byl" style="width:100%" onclick="saveYR()">✦ LƯU TỔNG KẾT NĂM</button>
+    </div>
+  </div>
+
+  <!-- ══ TAB POMODORO ══ -->
+  <div class="pnl" id="pnl-pomodoro">
+    <!-- Header summary banner -->
+    <div class="card" style="background:linear-gradient(135deg,rgba(255,51,102,.08),rgba(255,107,53,.05));border-color:rgba(255,51,102,.3);margin-bottom:14px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div>
+          <div class="ct" style="color:var(--red);font-size:18px;margin-bottom:5px;letter-spacing:2px;text-shadow:0 0 12px rgba(255,68,102,.5);">
+            🍅 ĐỒNG HỒ TẬP TRUNG POMODORO
+          </div>
+          <div style="color:var(--mut);font-size:12px;font-family:'Space Mono',monospace;letter-spacing:1px;line-height:1.5;">
+            Tập trung học tập và nghỉ giải lao luân phiên tự động.
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div id="pomoActiveBadge" style="padding:8px 16px;border-radius:20px;font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:1px;background:rgba(255,68,102,.12);border:1px solid rgba(255,68,102,.4);color:var(--red);display:flex;align-items:center;gap:8px;">
+            <span style="width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 8px var(--red);animation:pulseDot 1.5s infinite;"></span>
+            <span id="pomoActiveText">SẴN SÀNG</span>
+          </div>
+          <div class="sb" style="min-width:80px;padding:8px 14px;border-color:rgba(255,68,102,.25);">
+            <div class="sv" id="pomoCompletedCount" style="color:var(--c5);font-size:20px;">0</div>
+            <div class="sl">Phiên xong 🍅</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="max-width:680px;margin:0 auto;">
+      <!-- Đồng hồ Pomodoro -->
+      <div class="card" style="border-color:rgba(255,68,102,.28)">
+        <div class="ct" style="color:var(--c5)">⏱️ ĐỒNG HỒ TẬP TRUNG</div>
+
+        <!-- Mode selector pills -->
+        <div style="display:flex;gap:8px;justify-content:center;margin-bottom:14px;flex-wrap:wrap;">
+          <button class="tb-pomo act" id="pbtn-work" onclick="setMainPomoMode('work',25)">🎯 Học tập (25p)</button>
+          <button class="tb-pomo" id="pbtn-short" onclick="setMainPomoMode('short',5)">☕ Nghỉ ngắn (5p)</button>
+          <button class="tb-pomo" id="pbtn-long" onclick="setMainPomoMode('long',15)">🌴 Nghỉ dài (15p)</button>
+          <button class="tb-pomo" id="pbtn-custom" onclick="openCustomPomoPrompt()">⚙️ Tùy chỉnh</button>
+        </div>
+
+        <!-- Khung tùy chỉnh giờ Học & giờ Nghỉ luân phiên -->
+        <div id="customPomoConfigBox" style="display:none;background:rgba(255,68,102,.08);border:1px solid rgba(255,68,102,.35);border-radius:12px;padding:12px 14px;margin-bottom:16px;">
+          <div style="font-family:'Orbitron',monospace;font-size:10px;color:var(--c5);letter-spacing:1px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">
+            <span>⚙️ CÀI ĐẶT THỜI GIAN HỌC & NGHỈ LUÂN PHIÊN</span>
+            <span style="cursor:pointer;color:var(--mut);font-size:12px;" onclick="toggleCustomPomoBox(false)">✕</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+            <div style="background:rgba(0,0,0,.3);padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.08);">
+              <label class="fl" style="color:var(--c4);margin-bottom:6px;">🔥 Thời gian Học</label>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <input type="number" id="custWorkH" min="0" max="12" value="0" style="width:58px;padding:5px 6px;text-align:center;font-size:13px;" title="Số giờ học">
+                <span style="font-size:11px;color:var(--mut);">giờ</span>
+                <input type="number" id="custWorkM" min="0" max="240" value="50" style="width:62px;padding:5px 6px;text-align:center;font-size:13px;" title="Số phút học">
+                <span style="font-size:11px;color:var(--mut);">phút</span>
+              </div>
+            </div>
+            <div style="background:rgba(0,0,0,.3);padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.08);">
+              <label class="fl" style="color:var(--c1);margin-bottom:6px;">☕ Thời gian Nghỉ</label>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <input type="number" id="custBreakH" min="0" max="5" value="0" style="width:58px;padding:5px 6px;text-align:center;font-size:13px;" title="Số giờ nghỉ">
+                <span style="font-size:11px;color:var(--mut);">giờ</span>
+                <input type="number" id="custBreakM" min="0" max="120" value="10" style="width:62px;padding:5px 6px;text-align:center;font-size:13px;" title="Số phút nghỉ">
+                <span style="font-size:11px;color:var(--mut);">phút</span>
+              </div>
+            </div>
+          </div>
+          <button class="btn bc bsm" style="width:100%;" onclick="applyCustomPomoSettings()">✓ ÁP DỤNG & CHẠY LUÂN PHIÊN (HỌC ⇄ NGHỈ)</button>
+        </div>
+
+        <!-- Timer Circle / Display -->
+        <div style="text-align:center;padding:24px 10px;margin-bottom:16px;background:rgba(0,0,0,.28);border-radius:16px;border:1px solid rgba(255,68,102,.2);position:relative;">
+          <div id="mainPomoTimer" style="font-family:'Orbitron',monospace;font-size:clamp(44px,7vw,64px);font-weight:900;color:var(--txt);letter-spacing:4px;text-shadow:0 0 24px rgba(255,68,102,.45);">25:00</div>
+          <div id="mainPomoStatus" style="font-family:'Space Mono',monospace;font-size:12px;color:var(--mut);margin-top:8px;letter-spacing:1px;">
+            Sẵn sàng bắt đầu phiên học tập
+          </div>
+          <!-- Progress bar -->
+          <div style="height:5px;background:rgba(255,255,255,.08);border-radius:3px;margin:18px auto 0;max-width:320px;overflow:hidden;">
+            <div id="mainPomoBar" style="height:100%;width:100%;background:linear-gradient(90deg,var(--c5),var(--red));transition:width 0.3s;"></div>
+          </div>
+        </div>
+
+        <!-- Controls buttons -->
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+          <button class="btn" id="mainPomoStartBtn" onclick="startMainPomo()" style="background:linear-gradient(135deg,rgba(255,68,102,.3),rgba(255,107,53,.25));border:1px solid rgba(255,68,102,.6);color:#fff;min-width:130px;box-shadow:0 0 16px rgba(255,68,102,.3);">
+            ▶ BẮT ĐẦU
+          </button>
+          <button class="btn" id="mainPomoPauseBtn" onclick="pauseMainPomo()" style="display:none;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);color:var(--txt);min-width:130px;">
+            ⏸ TẠM DỪNG
+          </button>
+          <button class="btn" onclick="resetMainPomo()" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.15);color:var(--mut);">
+            🔄 ĐẶT LẠI
+          </button>
+          <button class="btn" onclick="skipMainPomo()" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.15);color:var(--mut);" title="Chuyển sang phiên tiếp theo">
+            ⏭ BỎ QUA
+          </button>
+        </div>
+
+        <div style="margin-top:16px;padding:10px 14px;background:rgba(0,0,0,.2);border-radius:10px;font-size:11px;color:var(--mut);line-height:1.6;display:flex;align-items:center;justify-content:space-between;">
+          <span>🔔 Âm thanh kết thúc:</span>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;color:var(--c1);">
+            <input type="checkbox" id="mainPomoSoundToggle" checked style="accent-color:var(--c1);"> Bật chuông báo
+          </label>
+        </div>
+      </div>
     </div>
   </div>
 </div><!-- end aw -->
@@ -1417,9 +1581,9 @@ function showAlarmBanner(task){
     '<div class="abanner-left">'+
       '<div class="abanner-bell">🔔</div>'+
       '<div class="abanner-info">'+
-        '<div class="abanner-title">⚡ ĐẾN GIỜ THỰC HIỆN!</div>'+
+        '<div class="abanner-title">'+(task.endTime?'⌛ ĐÃ HẾT GIỜ!':'⚡ ĐẾN GIỜ THỰC HIỆN!')+'</div>'+
         '<div class="abanner-name">'+esc(task.name)+'</div>'+
-        '<div class="abanner-time">⏰ '+task.time+' — Hãy chuyển sang tab Ngày và hoàn thành nhiệm vụ</div>'+
+        '<div class="abanner-time">⏰ '+esc(task.endTime?((task.startTime||task.time)+' - '+task.endTime):task.time)+' — Hãy chuyển sang tab Ngày và hoàn thành nhiệm vụ</div>'+
       '</div>'+
     '</div>'+
     '<div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">'+
@@ -1483,6 +1647,7 @@ function switchTab(name,el){
   if(name==='month')renderMonth();
   if(name==='year')renderYear();
   if(name==='wheel'){renderWheelTickets();}
+  if(name==='pomodoro'){renderTaskSchedulesInPomo();updateMainPomoUI();renderMainBlockedSites();}
 }
 
 // ═══════════════════════════════════
@@ -1490,13 +1655,29 @@ function switchTab(name,el){
 // ═══════════════════════════════════
 function addTask(){
   var name=getVal('tName').trim();
-  if(!name){flashEl('tName');return;}
-  var tm=getVal('tTime'),dc=getVal('tDesc').trim(),pr=getVal('tPr');
+  if(!name){flashEl('tName');showToast('Thiếu tên mục tiêu','Vui lòng nhập tên công việc / mục tiêu!');return;}
+  var startTm=getVal('tStartTime');
+  if(!startTm){flashEl('tStartTime');showToast('Thiếu giờ bắt đầu','Vui lòng nhập giờ bắt đầu công việc!');return;}
+  var endTm=getVal('tEndTime');
+  if(!endTm){flashEl('tEndTime');showToast('Thiếu giờ kết thúc','Vui lòng nhập giờ kết thúc công việc!');return;}
+  var dc=getVal('tDesc').trim(),pr=getVal('tPr');
   var k=todayKey();
   if(!D.tasks[k])D.tasks[k]=[];
-  D.tasks[k].push({id:uid(),name:name,time:tm,desc:dc,priority:pr,done:false});
+  D.tasks[k].push({
+    id:uid(),
+    name:name,
+    time:startTm,
+    startTime:startTm,
+    endTime:endTm,
+    desc:dc,
+    priority:pr,
+    done:false
+  });
   saveD();renderTasks();playAdd();
-  setVal('tName','');setVal('tTime','');setVal('tDesc','');
+  setVal('tName','');setVal('tStartTime','');setVal('tEndTime','');setVal('tDesc','');
+  if(typeof renderTaskSchedulesInPomo==='function')renderTaskSchedulesInPomo();
+  if(typeof updateMainPomoUI==='function')updateMainPomoUI();
+  if(typeof syncDesktopBlocker==='function')syncDesktopBlocker();
 }
 
 function toggleTask(id){
@@ -1517,6 +1698,9 @@ function toggleTask(id){
     }
   }
   saveD();renderTasks();updateTicketDisplay();
+  if(typeof renderTaskSchedulesInPomo==='function')renderTaskSchedulesInPomo();
+  if(typeof updateMainPomoUI==='function')updateMainPomoUI();
+  if(typeof syncDesktopBlocker==='function')syncDesktopBlocker();
 }
 
 function deleteTask(id){
@@ -1525,6 +1709,9 @@ function deleteTask(id){
   var k=todayKey();
   D.tasks[k]=(D.tasks[k]||[]).filter(function(t){return t.id!==id;});
   saveD();renderTasks();
+  if(typeof renderTaskSchedulesInPomo==='function')renderTaskSchedulesInPomo();
+  if(typeof updateMainPomoUI==='function')updateMainPomoUI();
+  if(typeof syncDesktopBlocker==='function')syncDesktopBlocker();
 }
 
 function renderTasks(){
@@ -1541,14 +1728,25 @@ function renderTasks(){
   updateTicketDisplay();
   var list=getEl('taskList');
   if(!tasks.length){list.innerHTML='<div class="es"><div class="ei">🚀</div><div class="et">Chưa có mục tiêu — hãy bắt đầu!</div></div>';return;}
-  var sorted=tasks.slice().sort(function(a,b){if(!a.time&&!b.time)return 0;if(!a.time)return 1;if(!b.time)return -1;return a.time.localeCompare(b.time);});
+  var sorted=tasks.slice().sort(function(a,b){
+    var ta=a.startTime||a.time||'';
+    var tb=b.startTime||b.time||'';
+    if(!ta&&!tb)return 0;if(!ta)return 1;if(!tb)return -1;
+    return ta.localeCompare(tb);
+  });
   var html='';
   sorted.forEach(function(t){
     var isRinging=!!ringLoops[t.id];
+    var timeLabel='';
+    if(t.startTime&&t.endTime){
+      timeLabel=t.startTime+' - '+t.endTime;
+    } else if(t.time){
+      timeLabel=t.time;
+    }
     html+='<div class="ti '+(t.done?'dn':'')+' '+(isRinging?'rng':'')+'" id="ti-'+t.id+'">';
     html+='<div class="tchk '+(t.done?'chk':'')+'" onclick="toggleTask(\''+t.id+'\')">'+( t.done?'✓':'')+'</div>';
     html+='<div class="tbdy"><div class="thdr">';
-    if(t.time)html+='<span class="ttag">⏰ '+t.time+'</span>';
+    if(timeLabel)html+='<span class="ttag">⏰ '+esc(timeLabel)+'</span>';
     html+='<span class="tn">'+esc(t.name)+'</span>';
     html+='<span class="prio '+(PCLS[t.priority]||'pm')+'">'+(PLBL[t.priority]||'')+'</span>';
     if(isRinging)html+='<span class="rng-label">🔔 ĐẾN GIỜ!</span>';
@@ -1569,13 +1767,35 @@ function renderTasks(){
   list.innerHTML=html;
 }
 
+// Thông báo giờ bắt đầu: toast + thông báo hệ thống, không có âm thanh
+function notifyTaskStart(t){
+  var range=(t.startTime||t.time)+(t.endTime?' - '+t.endTime:'');
+  showToast('⏰ Đến giờ bắt đầu: '+esc(t.name),'Khung giờ '+range+'. Chúc bạn tập trung!');
+  if(window.Notification&&Notification.permission==='granted'){
+    try{new Notification('⏰ Đến giờ bắt đầu: '+t.name,{body:'Khung giờ '+range,icon:'icons/icon128.png',silent:true});}catch(e){}
+  }
+}
+
 function checkAlarms(now){
   var k=todayKey(),tasks=D.tasks[k]||[];
   var hm=pad(now.getHours())+':'+pad(now.getMinutes());
   tasks.forEach(function(t){
-    if(!t.time||t.done)return;
-    // Kích hoạt báo động khi đúng giờ, chưa được kích trước đó
-    if(t.time===hm&&alarmSet.indexOf(t.id)<0){
+    if(t.done)return;
+    var startT=t.startTime||t.time;
+    var endT=t.endTime||'';
+    if(endT){
+      // Giờ bắt đầu: chỉ thông báo, KHÔNG phát âm thanh
+      if(startT&&startT===hm&&alarmSet.indexOf(t.id+':start')<0){
+        alarmSet.push(t.id+':start');
+        notifyTaskStart(t);
+      }
+      // Giờ kết thúc: phát âm thanh báo động
+      if(endT===hm&&alarmSet.indexOf(t.id+':end')<0){
+        alarmSet.push(t.id+':end');
+        startRinging(t);
+      }
+    } else if(startT&&startT===hm&&alarmSet.indexOf(t.id)<0){
+      // Mục tiêu cũ không có giờ kết thúc: giữ nguyên hành vi báo động
       alarmSet.push(t.id);
       startRinging(t);
     }
@@ -2954,6 +3174,476 @@ document.addEventListener('keydown',function(e){
   }
 });
 
+// ══════════════════════════════════════════════════════════════
+// ═══ TAB POMODORO & TRÌNH CHẶN TRANG WEB TRONG GIỜ HỌC ═══
+// ══════════════════════════════════════════════════════════════
+var mainPomoInterval = null;
+var mainPomoTimeLeft = 25 * 60;
+var mainPomoTotal = 25 * 60;
+var mainPomoMode = 'work';  // 'work' | 'short' | 'long' | 'custom'
+var mainPomoPhase = 'work'; // 'work' (Học tập) | 'break' (Giải lao)
+var mainPomoRunning = false;
+var mainPomoCompletedToday = 0;
+var pomoCustomConfig = {
+  workH: 0,
+  workM: 50,
+  breakH: 0,
+  breakM: 10,
+  workMins: 50,
+  breakMins: 10
+};
+var mainBlockedSites = ['facebook.com', 'tiktok.com', 'youtube.com', 'instagram.com', 'netflix.com'];
+var mainBlockerSettings = {
+  blockOnPomo: true,
+  blockOnSchedule: false
+};
+
+var pomoStorage = {
+  get: function(keys, cb) {
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+      chrome.storage.local.get(keys, function(res) {
+        cb(res || {});
+      });
+    } else {
+      var res = {};
+      keys.forEach(function(k) {
+        try {
+          var val = localStorage.getItem(k);
+          if (val) res[k] = JSON.parse(val);
+        } catch(e) {}
+      });
+      cb(res);
+    }
+  },
+  set: function(data, cb) {
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+      chrome.storage.local.set(data, function() {
+        if (cb) cb();
+      });
+    }
+    try {
+      Object.keys(data).forEach(function(k) {
+        localStorage.setItem(k, JSON.stringify(data[k]));
+      });
+    } catch(e) {}
+    if (cb && !(typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local)) {
+      cb();
+    }
+  }
+};
+
+function formatMainPomoTime(sec) {
+  var h = Math.floor(sec / 3600);
+  var m = Math.floor((sec % 3600) / 60);
+  var s = sec % 60;
+  if (h > 0) {
+    return pad(h) + ':' + pad(m) + ':' + pad(s);
+  }
+  return pad(m) + ':' + pad(s);
+}
+
+function formatMinsShort(mins) {
+  var h = Math.floor(mins / 60);
+  var m = mins % 60;
+  if (h > 0 && m > 0) return h + 'h' + m + 'p';
+  if (h > 0) return h + 'h';
+  return m + 'p';
+}
+
+function updateCustomButtonLabel() {
+  var customBtn = getEl('pbtn-custom');
+  if (customBtn) {
+    customBtn.textContent = '⚙️ Tùy chỉnh (' + formatMinsShort(pomoCustomConfig.workMins) + '/' + formatMinsShort(pomoCustomConfig.breakMins) + ')';
+  }
+}
+
+function setMainPomoMode(mode, minutes, autoStart) {
+  pauseMainPomo();
+  mainPomoMode = mode;
+  if (mode === 'work') {
+    mainPomoPhase = 'work';
+    mainPomoTimeLeft = (minutes || 25) * 60;
+  } else if (mode === 'short') {
+    mainPomoPhase = 'break';
+    mainPomoTimeLeft = (minutes || 5) * 60;
+  } else if (mode === 'long') {
+    mainPomoPhase = 'break';
+    mainPomoTimeLeft = (minutes || 15) * 60;
+  } else if (mode === 'custom') {
+    mainPomoPhase = 'work';
+    mainPomoTimeLeft = (pomoCustomConfig.workMins || minutes || 50) * 60;
+  }
+  mainPomoTotal = mainPomoTimeLeft;
+
+  ['work', 'short', 'long', 'custom'].forEach(function(m) {
+    var btn = getEl('pbtn-' + m);
+    if (btn) btn.classList.toggle('act', m === mode);
+  });
+
+  if (mode !== 'custom') {
+    toggleCustomPomoBox(false);
+  }
+
+  syncMainPomoState();
+  updateMainPomoUI();
+  if (autoStart) {
+    startMainPomo();
+  }
+}
+
+function toggleCustomPomoBox(show) {
+  var box = getEl('customPomoConfigBox');
+  if (!box) return;
+  if (typeof show === 'boolean') {
+    box.style.display = show ? 'block' : 'none';
+  } else {
+    box.style.display = box.style.display === 'none' ? 'block' : 'none';
+  }
+}
+
+function openCustomPomoPrompt() {
+  if (getEl('custWorkH')) getEl('custWorkH').value = pomoCustomConfig.workH || 0;
+  if (getEl('custWorkM')) getEl('custWorkM').value = pomoCustomConfig.workM || 50;
+  if (getEl('custBreakH')) getEl('custBreakH').value = pomoCustomConfig.breakH || 0;
+  if (getEl('custBreakM')) getEl('custBreakM').value = pomoCustomConfig.breakM || 10;
+  toggleCustomPomoBox(true);
+  setMainPomoMode('custom', pomoCustomConfig.workMins);
+}
+
+function applyCustomPomoSettings() {
+  var wH = Math.max(0, parseInt(getVal('custWorkH'), 10) || 0);
+  var wM = Math.max(0, parseInt(getVal('custWorkM'), 10) || 0);
+  var bH = Math.max(0, parseInt(getVal('custBreakH'), 10) || 0);
+  var bM = Math.max(0, parseInt(getVal('custBreakM'), 10) || 0);
+
+  var totalWorkMins = wH * 60 + wM;
+  var totalBreakMins = bH * 60 + bM;
+
+  if (totalWorkMins < 1) {
+    flashEl('custWorkM');
+    showToast('Lỗi thời gian học', 'Thời gian học phải từ 1 phút trở lên!');
+    return;
+  }
+  if (totalBreakMins < 1) {
+    flashEl('custBreakM');
+    showToast('Lỗi thời gian nghỉ', 'Thời gian nghỉ phải từ 1 phút trở lên!');
+    return;
+  }
+
+  pomoCustomConfig = {
+    workH: Math.floor(totalWorkMins / 60),
+    workM: totalWorkMins % 60,
+    breakH: Math.floor(totalBreakMins / 60),
+    breakM: totalBreakMins % 60,
+    workMins: totalWorkMins,
+    breakMins: totalBreakMins
+  };
+
+  pomoStorage.set({ pomoCustomConfig: pomoCustomConfig });
+  updateCustomButtonLabel();
+  toggleCustomPomoBox(false);
+  setMainPomoMode('custom', totalWorkMins, true);
+  showToast(
+    '⚙️ Đã bật Pomodoro Tùy chỉnh',
+    'Học ' + formatMinsShort(totalWorkMins) + ' ⇄ Nghỉ ' + formatMinsShort(totalBreakMins) + ' (tự động chạy luân phiên).'
+  );
+}
+
+function startMainPomo() {
+  if (mainPomoRunning) return;
+  mainPomoRunning = true;
+  syncMainPomoState();
+  updateMainPomoUI();
+
+  clearInterval(mainPomoInterval);
+  mainPomoInterval = setInterval(function() {
+    if (mainPomoTimeLeft > 0) {
+      mainPomoTimeLeft--;
+      updateMainPomoUI();
+      if (mainPomoTimeLeft % 5 === 0) syncMainPomoState();
+    } else {
+      clearInterval(mainPomoInterval);
+      mainPomoRunning = false;
+      onMainPomoComplete();
+    }
+  }, 1000);
+}
+
+function pauseMainPomo() {
+  clearInterval(mainPomoInterval);
+  mainPomoRunning = false;
+  syncMainPomoState();
+  updateMainPomoUI();
+}
+
+function resetMainPomo() {
+  pauseMainPomo();
+  if (mainPomoMode === 'custom') {
+    mainPomoPhase = 'work';
+    mainPomoTimeLeft = (pomoCustomConfig.workMins || 50) * 60;
+  } else if (mainPomoMode === 'short') {
+    mainPomoPhase = 'break';
+    mainPomoTimeLeft = 5 * 60;
+  } else if (mainPomoMode === 'long') {
+    mainPomoPhase = 'break';
+    mainPomoTimeLeft = 15 * 60;
+  } else {
+    mainPomoPhase = 'work';
+    mainPomoTimeLeft = 25 * 60;
+  }
+  mainPomoTotal = mainPomoTimeLeft;
+  syncMainPomoState();
+  updateMainPomoUI();
+}
+
+function skipMainPomo() {
+  var wasRunning = mainPomoRunning;
+  pauseMainPomo();
+  if (mainPomoPhase === 'work') {
+    // Chuyển từ Học sang Nghỉ
+    mainPomoPhase = 'break';
+    if (mainPomoMode === 'custom') {
+      mainPomoTimeLeft = (pomoCustomConfig.breakMins || 10) * 60;
+      mainPomoTotal = mainPomoTimeLeft;
+    } else {
+      mainPomoMode = 'short';
+      mainPomoTimeLeft = 5 * 60;
+      mainPomoTotal = mainPomoTimeLeft;
+      ['work', 'short', 'long', 'custom'].forEach(function(m) {
+        var btn = getEl('pbtn-' + m);
+        if (btn) btn.classList.toggle('act', m === 'short');
+      });
+    }
+  } else {
+    // Chuyển từ Nghỉ sang Học
+    mainPomoPhase = 'work';
+    if (mainPomoMode === 'custom') {
+      mainPomoTimeLeft = (pomoCustomConfig.workMins || 50) * 60;
+      mainPomoTotal = mainPomoTimeLeft;
+    } else {
+      mainPomoMode = 'work';
+      mainPomoTimeLeft = 25 * 60;
+      mainPomoTotal = mainPomoTimeLeft;
+      ['work', 'short', 'long', 'custom'].forEach(function(m) {
+        var btn = getEl('pbtn-' + m);
+        if (btn) btn.classList.toggle('act', m === 'work');
+      });
+    }
+  }
+  syncMainPomoState();
+  updateMainPomoUI();
+  if (wasRunning) {
+    startMainPomo();
+  }
+}
+
+function playPomoChime() {
+  var toggle = getEl('mainPomoSoundToggle');
+  if (toggle && !toggle.checked) return;
+  var c = getAC();
+  if (!c) return;
+  var now = c.currentTime;
+  [523.25, 659.25, 783.99, 1046.50].forEach(function(freq, i) {
+    var osc = c.createOscillator();
+    var gain = c.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(freq, now + i * 0.16);
+    gain.gain.setValueAtTime(0.25, now + i * 0.16);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.16 + 0.9);
+    osc.connect(gain);
+    gain.connect(c.destination);
+    osc.start(now + i * 0.16);
+    osc.stop(now + i * 0.16 + 1.0);
+  });
+}
+
+// Khi hoàn thành 1 phiên: tự động chuyển pha Học ⇄ Nghỉ và tự động chạy tiếp liên tục
+function onMainPomoComplete() {
+  playPomoChime();
+
+  if (mainPomoPhase === 'work') {
+    mainPomoCompletedToday++;
+    setText('pomoCompletedCount', mainPomoCompletedToday);
+    pomoStorage.set({ pomoCompletedCount: mainPomoCompletedToday });
+
+    var nextBreakMins = mainPomoMode === 'custom' ? (pomoCustomConfig.breakMins || 10) : 5;
+    showToast(
+      '🎉 HOÀN THÀNH PHIÊN HỌC!',
+      'Tự động chuyển sang Giờ Nghỉ (' + formatMinsShort(nextBreakMins) + ').'
+    );
+
+    if (window.Notification && Notification.permission === 'granted') {
+      new Notification('🎉 Hoàn thành phiên Học tập!', {
+        body: 'Tuyệt vời! Hệ thống tự động chuyển sang Giờ Nghỉ ' + formatMinsShort(nextBreakMins) + '.',
+        icon: 'icons/icon128.png'
+      });
+    }
+
+    // Tự động chuyển sang pha Nghỉ và chạy luôn
+    mainPomoPhase = 'break';
+    if (mainPomoMode === 'custom') {
+      mainPomoTimeLeft = nextBreakMins * 60;
+      mainPomoTotal = mainPomoTimeLeft;
+    } else {
+      mainPomoMode = 'short';
+      mainPomoTimeLeft = 5 * 60;
+      mainPomoTotal = mainPomoTimeLeft;
+      ['work', 'short', 'long', 'custom'].forEach(function(m) {
+        var btn = getEl('pbtn-' + m);
+        if (btn) btn.classList.toggle('act', m === 'short');
+      });
+    }
+    startMainPomo();
+  } else {
+    var nextWorkMins = mainPomoMode === 'custom' ? (pomoCustomConfig.workMins || 50) : 25;
+    showToast(
+      '⏰ HẾT GIỜ NGHỈ!',
+      'Tự động bắt đầu phiên Học tập tiếp theo (' + formatMinsShort(nextWorkMins) + ')!'
+    );
+
+    if (window.Notification && Notification.permission === 'granted') {
+      new Notification('⏰ Hết giờ nghỉ ngơi!', {
+        body: 'Đã tự động bắt đầu phiên Học tập (' + formatMinsShort(nextWorkMins) + ')!',
+        icon: 'icons/icon128.png'
+      });
+    }
+
+    // Tự động chuyển sang pha Học và chạy luôn
+    mainPomoPhase = 'work';
+    if (mainPomoMode === 'custom') {
+      mainPomoTimeLeft = nextWorkMins * 60;
+      mainPomoTotal = mainPomoTimeLeft;
+    } else {
+      mainPomoMode = 'work';
+      mainPomoTimeLeft = 25 * 60;
+      mainPomoTotal = mainPomoTimeLeft;
+      ['work', 'short', 'long', 'custom'].forEach(function(m) {
+        var btn = getEl('pbtn-' + m);
+        if (btn) btn.classList.toggle('act', m === 'work');
+      });
+    }
+    startMainPomo();
+  }
+}
+
+function updateMainPomoUI() {
+  var timerEl = getEl('mainPomoTimer');
+  if (timerEl) timerEl.textContent = formatMainPomoTime(mainPomoTimeLeft);
+
+  var barEl = getEl('mainPomoBar');
+  if (barEl) {
+    var pct = mainPomoTotal > 0 ? Math.round((mainPomoTimeLeft / mainPomoTotal) * 100) : 0;
+    barEl.style.width = pct + '%';
+  }
+
+  var startBtn = getEl('mainPomoStartBtn');
+  var pauseBtn = getEl('mainPomoPauseBtn');
+  if (startBtn && pauseBtn) {
+    if (mainPomoRunning) {
+      startBtn.style.display = 'none';
+      pauseBtn.style.display = 'inline-block';
+    } else {
+      startBtn.style.display = 'inline-block';
+      pauseBtn.style.display = 'none';
+    }
+  }
+
+  var statusEl = getEl('mainPomoStatus');
+  var badgeEl = getEl('pomoActiveBadge');
+  var badgeText = getEl('pomoActiveText');
+
+  var isWork = mainPomoPhase === 'work';
+
+  if (statusEl) {
+    if (mainPomoRunning) {
+      if (isWork) {
+        var nextB = mainPomoMode === 'custom' ? formatMinsShort(pomoCustomConfig.breakMins) : '5p';
+        statusEl.innerHTML = '<span style="color:var(--c4)">🔥 Đang Học tập · Hết giờ tự chuyển sang Nghỉ ' + nextB + '</span>';
+      } else {
+        var nextW = mainPomoMode === 'custom' ? formatMinsShort(pomoCustomConfig.workMins) : '25p';
+        statusEl.innerHTML = '<span style="color:var(--c1)">☕ Đang Nghỉ giải lao · Hết giờ tự chuyển sang Học ' + nextW + '</span>';
+      }
+    } else {
+      statusEl.textContent = 'Đã tạm dừng / Sẵn sàng bắt đầu (Tự động chạy luân phiên Học ⇄ Nghỉ)';
+    }
+  }
+
+  if (badgeEl && badgeText) {
+    if (mainPomoRunning && isWork) {
+      badgeEl.style.borderColor = 'var(--c4)';
+      badgeEl.style.color = 'var(--c4)';
+      badgeEl.style.background = 'rgba(57,255,20,.12)';
+      badgeText.textContent = 'ĐANG HỌC TẬP';
+    } else {
+      badgeEl.style.borderColor = 'rgba(255,68,102,.4)';
+      badgeEl.style.color = 'var(--red)';
+      badgeEl.style.background = 'rgba(255,68,102,.12)';
+      badgeText.textContent = mainPomoRunning ? 'GIỜ GIẢI LAO' : 'SẴN SÀNG';
+    }
+  }
+}
+
+function syncMainPomoState() {
+  pomoStorage.set({
+    pomoState: {
+      isRunning: mainPomoRunning,
+      currentMode: mainPomoMode,
+      currentPhase: mainPomoPhase,
+      timeLeft: mainPomoTimeLeft,
+      totalTime: mainPomoTotal,
+      updatedAt: Date.now()
+    }
+  });
+}
+
+function initMainPomoAndBlocker() {
+  pomoStorage.get(['pomoState', 'pomoCompletedCount', 'pomoCustomConfig'], function(res) {
+    if (res.pomoCompletedCount) {
+      mainPomoCompletedToday = res.pomoCompletedCount;
+      setText('pomoCompletedCount', mainPomoCompletedToday);
+    }
+
+    if (res.pomoCustomConfig && res.pomoCustomConfig.workMins) {
+      pomoCustomConfig = res.pomoCustomConfig;
+    }
+    updateCustomButtonLabel();
+
+    if (res.pomoState) {
+      mainPomoMode = res.pomoState.currentMode || 'work';
+      mainPomoPhase = res.pomoState.currentPhase || ((mainPomoMode === 'short' || mainPomoMode === 'long') ? 'break' : 'work');
+      ['work', 'short', 'long', 'custom'].forEach(function(m) {
+        var btn = getEl('pbtn-' + m);
+        if (btn) btn.classList.toggle('act', m === mainPomoMode);
+      });
+
+      var defaultTotal = (mainPomoMode === 'custom'
+        ? (mainPomoPhase === 'work' ? pomoCustomConfig.workMins : pomoCustomConfig.breakMins)
+        : (mainPomoMode === 'short' ? 5 : (mainPomoMode === 'long' ? 15 : 25))) * 60;
+      mainPomoTotal = res.pomoState.totalTime || defaultTotal;
+
+      if (res.pomoState.isRunning) {
+        var elapsed = Math.floor((Date.now() - (res.pomoState.updatedAt || Date.now())) / 1000);
+        mainPomoTimeLeft = Math.max(0, (res.pomoState.timeLeft || defaultTotal) - elapsed);
+        if (mainPomoTimeLeft > 0) {
+          startMainPomo();
+        } else {
+          mainPomoTimeLeft = defaultTotal;
+          updateMainPomoUI();
+        }
+      } else {
+        mainPomoTimeLeft = res.pomoState.timeLeft || defaultTotal;
+        updateMainPomoUI();
+      }
+    } else {
+      updateMainPomoUI();
+    }
+  });
+
+  if (window.Notification && Notification.permission === 'default') {
+    try { Notification.requestPermission(); } catch(e) {}
+  }
+}
+
 // ═══ INIT ═══
 loadD();
 if(!D.streak)D.streak={count:0,best:0,lastDate:'',history:[]};
@@ -2964,6 +3654,7 @@ initPrinciples();
 renderPrinciples();
 renderTasks();
 initCal();
+initMainPomoAndBlocker();
 var c=getEl('wheelCanvas');if(c)drawWheel(0);
 updateTicketDisplay();
 renderStreakUI();

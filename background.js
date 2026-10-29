@@ -2,8 +2,12 @@
 
 const STORAGE_KEY = "nova_planner_v2";
 const ALARM_PREFIX = "nova-task:";
+const POMO_ALARM = "nova-pomo-timer";
 const ICON_URL = "icons/icon128.png";
 
+/* ══════════════════════════════════════════════════════════════
+   1. STORAGE & TASK NOTIFICATION SYSTEM (Alarms)
+══════════════════════════════════════════════════════════════ */
 function storageGet(key) {
   return new Promise((resolve) => {
     chrome.storage.local.get([key], (result) => {
@@ -95,23 +99,68 @@ async function showTaskNotification(alarmName) {
   chrome.notifications.create(`notify-${taskId}`, {
     type: "basic",
     iconUrl: ICON_URL,
-    title: `Đến giờ: ${task.name}`,
-    message: task.desc ? `${task.time} - ${task.desc}` : `${task.time} - Đã đến lúc thực hiện.`,
+    title: `⏰ Đến giờ: ${task.name}`,
+    message: task.desc ? `${task.time} - ${task.desc}` : `${task.time} - Đã đến lúc thực hiện mục tiêu.`,
     priority: 2
   });
 }
 
-chrome.runtime.onInstalled.addListener(scheduleAllAlarms);
-chrome.runtime.onStartup.addListener(scheduleAllAlarms);
+/* ══════════════════════════════════════════════════════════════
+   2. EVENT LISTENERS
+══════════════════════════════════════════════════════════════ */
+// Lắng nghe khi cài đặt hoặc khởi động extension
+chrome.runtime.onInstalled.addListener(() => {
+  scheduleAllAlarms();
+});
 
+chrome.runtime.onStartup.addListener(() => {
+  scheduleAllAlarms();
+});
+
+// Lắng nghe thay đổi trong storage
 chrome.storage.onChanged.addListener((changes, areaName) => {
-  if (areaName === "local" && changes[STORAGE_KEY]) {
-    scheduleAllAlarms();
+  if (areaName === "local") {
+    if (changes[STORAGE_KEY]) {
+      scheduleAllAlarms();
+    }
+    if (changes.pomoState) {
+      const state = changes.pomoState.newValue;
+      if (state && state.isRunning && state.timeLeft > 0) {
+        const alarmTime = Date.now() + state.timeLeft * 1000;
+        chrome.alarms.create(POMO_ALARM, { when: alarmTime });
+      } else {
+        chrome.alarms.clear(POMO_ALARM);
+      }
+    }
   }
 });
 
+// Xử lý báo thức Pomodoro và nhiệm vụ
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name.startsWith(ALARM_PREFIX)) {
     showTaskNotification(alarm.name);
+  } else if (alarm.name === POMO_ALARM) {
+    chrome.storage.local.get(["pomoState"], (res) => {
+      const state = res.pomoState || {};
+      const isWork = state.currentMode === "work";
+      chrome.notifications.create("pomo-notify", {
+        type: "basic",
+        iconUrl: ICON_URL,
+        title: isWork ? "🎉 Hoàn thành phiên Pomodoro!" : "⏰ Hết giờ giải lao!",
+        message: isWork
+          ? "Bạn đã hoàn thành phiên học tập 25 phút. Hãy nghỉ ngơi 5 phút nhé!"
+          : "Đã hết giờ giải lao. Hãy sẵn sàng cho phiên tập trung tiếp theo!",
+        priority: 2
+      });
+
+      chrome.storage.local.set({
+        pomoState: {
+          isRunning: false,
+          currentMode: isWork ? "short" : "work",
+          timeLeft: isWork ? 5 * 60 : 25 * 60,
+          updatedAt: Date.now()
+        }
+      });
+    });
   }
 });

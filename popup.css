@@ -940,3 +940,234 @@ select option {
     max-width: none;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════
+   POMODORO & WEBSITE BLOCKER STYLES
+══════════════════════════════════════════════════════════════ */
+.pomo-card,
+.blocker-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(10px);
+}
+
+.pomo-modes {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.mode-btn {
+  padding: 6px 12px;
+  border: 1px solid rgba(0, 213, 255, 0.25);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--muted);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.mode-btn:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.mode-btn.active {
+  background: linear-gradient(135deg, rgba(255, 93, 120, 0.22), rgba(255, 76, 207, 0.22));
+  border-color: var(--danger);
+  color: #ff859d;
+  box-shadow: 0 0 12px rgba(255, 93, 120, 0.35);
+}
+
+.pomo-timer {
+  font-size: 48px;
+  font-weight: 900;
+  text-align: center;
+  color: var(--text);
+  margin: 10px 0;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 2px;
+  text-shadow: 0 0 16px rgba(0, 213, 255, 0.35);
+}
+
+.pomo-status {
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 16px;
+  letter-spacing: 0.5px;
+}
+
+.pomo-controls {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.14);
+  transform: translateY(-1px);
+}
+
+.schedule-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(0, 213, 255, 0.14);
+  padding: 12px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  font-size: 12px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  color: var(--text);
+}
+
+.checkbox-label input[type="checkbox"] {
+  accent-color: var(--danger);
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+}
+
+.time-range {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.time-range input[type="time"] {
+  padding: 5px 8px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(0, 213, 255, 0.25);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 12px;
+  outline: none;
+}
+
+.time-range input[type="time"]:focus {
+  border-color: var(--neon1);
+}
+
+.quick-presets {
+  margin-bottom: 12px;
+}
+
+.preset-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.preset-chip {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(0, 213, 255, 0.18);
+  color: var(--neon1);
+  padding: 3px 8px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.preset-chip:hover {
+  background: rgba(0, 213, 255, 0.16);
+  border-color: var(--neon1);
+  transform: translateY(-1px);
+}
+
+.block-input-group {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.block-input-group input {
+  flex: 1;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(0, 213, 255, 0.25);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--text);
+  outline: none;
+}
+
+.block-input-group input:focus {
+  border-color: var(--neon1);
+  box-shadow: 0 0 8px rgba(0, 213, 255, 0.3);
+}
+
+.blocked-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.blocked-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 10px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  margin-bottom: 6px;
+  font-size: 12px;
+  transition: background 0.2s;
+}
+
+.blocked-list li:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.remove-site-btn {
+  background: transparent;
+  border: none;
+  color: var(--danger);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.remove-site-btn:hover {
+  background: rgba(255, 93, 120, 0.15);
+}
+
