@@ -125,9 +125,11 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
     }
     if (changes.pomoState) {
       const state = changes.pomoState.newValue;
-      if (state && state.isRunning && state.timeLeft > 0) {
-        const alarmTime = Date.now() + state.timeLeft * 1000;
-        chrome.alarms.create(POMO_ALARM, { when: alarmTime });
+      if (state && state.isRunning) {
+        const alarmTime = state.endTime || (Date.now() + (state.timeLeft || 0) * 1000);
+        if (alarmTime > Date.now()) {
+          chrome.alarms.create(POMO_ALARM, { when: alarmTime });
+        }
       } else {
         chrome.alarms.clear(POMO_ALARM);
       }
@@ -140,27 +142,48 @@ chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name.startsWith(ALARM_PREFIX)) {
     showTaskNotification(alarm.name);
   } else if (alarm.name === POMO_ALARM) {
-    chrome.storage.local.get(["pomoState"], (res) => {
-      const state = res.pomoState || {};
-      const isWork = state.currentMode === "work";
-      chrome.notifications.create("pomo-notify", {
+    chrome.storage.local.get(["pomoState", "pomoCustomConfig", "pomoCompletedCount"], (res) => {
+      const state = res.pomoState;
+      if (!state || !state.isRunning) return;
+      // Nếu trang chính (Web Worker) đã tự chuyển sang phiên tiếp theo rồi thì bỏ qua để tránh trùng lặp
+      if (state.endTime && state.endTime > Date.now() + 2000) return;
+
+      const customCfg = res.pomoCustomConfig || {};
+      const wasWork = (state.currentPhase || (state.currentMode === "work" ? "work" : "break")) === "work";
+      const isCustom = state.currentMode === "custom";
+      const nextPhase = wasWork ? "break" : "work";
+      const nextMode = isCustom ? "custom" : (wasWork ? "short" : "work");
+      const nextMins = isCustom
+        ? (wasWork ? (customCfg.breakMins || 10) : (customCfg.workMins || 50))
+        : (wasWork ? 5 : 25);
+      const nextSec = Math.max(1, nextMins) * 60;
+
+      chrome.notifications.create(`pomo-notify-${Date.now()}`, {
         type: "basic",
         iconUrl: ICON_URL,
-        title: isWork ? "🎉 Hoàn thành phiên Pomodoro!" : "⏰ Hết giờ giải lao!",
-        message: isWork
-          ? "Bạn đã hoàn thành phiên học tập 25 phút. Hãy nghỉ ngơi 5 phút nhé!"
-          : "Đã hết giờ giải lao. Hãy sẵn sàng cho phiên tập trung tiếp theo!",
+        title: wasWork ? "🎉 Hoàn thành phiên Pomodoro!" : "⏰ Hết giờ giải lao!",
+        message: wasWork
+          ? `Bạn đã hoàn thành phiên học tập! Tự động chuyển sang nghỉ ${nextMins} phút.`
+          : `Đã hết giờ giải lao! Tự động bắt đầu phiên học tập ${nextMins} phút.`,
         priority: 2
       });
 
-      chrome.storage.local.set({
+      const updates = {
         pomoState: {
-          isRunning: false,
-          currentMode: isWork ? "short" : "work",
-          timeLeft: isWork ? 5 * 60 : 25 * 60,
+          isRunning: true,
+          currentMode: nextMode,
+          currentPhase: nextPhase,
+          timeLeft: nextSec,
+          totalTime: nextSec,
+          endTime: Date.now() + nextSec * 1000,
+          sourceId: "bg-service-worker",
           updatedAt: Date.now()
         }
-      });
+      };
+      if (wasWork) {
+        updates.pomoCompletedCount = (res.pomoCompletedCount || 0) + 1;
+      }
+      chrome.storage.local.set(updates);
     });
   }
 });

@@ -708,9 +708,12 @@
      POMODORO & WEBSITE BLOCKER
   ══════════════════════════════════════════════════════════════ */
   let pomoTimerInterval = null;
+  let pomoBgWorker = null;
+  let pomoEndTime = null;
   let pomoTimeLeft = 25 * 60;
   let pomoMode = "work";
   let pomoIsRunning = false;
+  const popupInstanceId = uid();
   let blockedSites = [];
   let blockerSettings = {
     blockOnPomo: true,
@@ -747,6 +750,12 @@
     }
   };
 
+  function defaultPomoSeconds(mode) {
+    if (mode === "short") return 5 * 60;
+    if (mode === "long") return 15 * 60;
+    return 25 * 60;
+  }
+
   function formatPomoTime(seconds) {
     const m = Math.floor(seconds / 60).toString().padStart(2, "0");
     const s = (seconds % 60).toString().padStart(2, "0");
@@ -767,49 +776,114 @@
         statusDisplay.textContent = "Đã tạm dừng / Sẵn sàng";
       }
     }
+    document.title = pomoIsRunning
+      ? `${pomoMode === "work" ? "🍅" : "☕"} ${formatPomoTime(pomoTimeLeft)} — Nova Planner`
+      : "Nova Planner";
   }
 
   function syncPomoState() {
+    const currentLeft = (pomoIsRunning && pomoEndTime)
+      ? Math.max(0, Math.ceil((pomoEndTime - Date.now()) / 1000))
+      : pomoTimeLeft;
     pomoStorage.set({
       pomoState: {
         isRunning: pomoIsRunning,
         currentMode: pomoMode,
-        timeLeft: pomoTimeLeft,
+        currentPhase: pomoMode === "work" ? "work" : "break",
+        timeLeft: currentLeft,
+        totalTime: defaultPomoSeconds(pomoMode),
+        endTime: pomoIsRunning ? pomoEndTime : null,
+        sourceId: popupInstanceId,
         updatedAt: Date.now()
       }
     });
   }
 
-  function startPomoTimer() {
+  function tickPopupPomo() {
+    if (!pomoIsRunning || !pomoEndTime) return;
+    const now = Date.now();
+    if (now < pomoEndTime) {
+      const nextLeft = Math.max(0, Math.ceil((pomoEndTime - now) / 1000));
+      if (nextLeft !== pomoTimeLeft) {
+        pomoTimeLeft = nextLeft;
+        updatePomoUI();
+      }
+      return;
+    }
+
+    if (now - pomoEndTime > 12 * 3600 * 1000) {
+      pausePomoTimer();
+      pomoTimeLeft = defaultPomoSeconds(pomoMode);
+      syncPomoState();
+      updatePomoUI();
+      return;
+    }
+
+    while (pomoEndTime <= now) {
+      if (pomoMode === "work") {
+        pomoMode = "short";
+      } else {
+        pomoMode = "work";
+      }
+      pomoEndTime += defaultPomoSeconds(pomoMode) * 1000;
+    }
+
+    pomoTimeLeft = Math.max(1, Math.ceil((pomoEndTime - now) / 1000));
+    document.querySelectorAll(".mode-btn").forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset.mode === pomoMode);
+    });
+    playDone();
+    if (pomoMode === "short") {
+      showToast("🎉 Pomodoro Hoàn thành!", "Tự động chuyển sang giờ nghỉ 5 phút.");
+    } else {
+      showToast("⏰ Hết giờ nghỉ!", "Tự động bắt đầu phiên học tập 25 phút.");
+    }
+    syncPomoState();
+    updatePomoUI();
+  }
+
+  function ensurePopupWorker() {
+    if (pomoBgWorker) return;
+    try {
+      const blob = new Blob(["setInterval(function(){postMessage(1);},500);"], {
+        type: "application/javascript"
+      });
+      pomoBgWorker = new Worker(URL.createObjectURL(blob));
+      pomoBgWorker.onmessage = tickPopupPomo;
+    } catch (e) {
+      pomoBgWorker = null;
+    }
+  }
+
+  function startPomoTimer(resumeEndTime) {
     if (pomoIsRunning) return;
+    const ctx = getACtx();
+    if (ctx && ctx.state === "suspended") {
+      try { ctx.resume(); } catch (e) {}
+    }
+    if (pomoTimeLeft <= 0) {
+      pomoTimeLeft = defaultPomoSeconds(pomoMode);
+    }
     pomoIsRunning = true;
+    pomoEndTime = (typeof resumeEndTime === "number" && resumeEndTime > Date.now())
+      ? resumeEndTime
+      : Date.now() + pomoTimeLeft * 1000;
+    pomoTimeLeft = Math.max(0, Math.ceil((pomoEndTime - Date.now()) / 1000));
     syncPomoState();
     updatePomoUI();
 
+    ensurePopupWorker();
     clearInterval(pomoTimerInterval);
-    pomoTimerInterval = setInterval(() => {
-      if (pomoTimeLeft > 0) {
-        pomoTimeLeft--;
-        updatePomoUI();
-        if (pomoTimeLeft % 5 === 0) syncPomoState();
-      } else {
-        clearInterval(pomoTimerInterval);
-        pomoIsRunning = false;
-        playDone();
-        if (pomoMode === "work") {
-          showToast("🎉 Pomodoro Hoàn thành!", "Hãy nghỉ ngơi 5 phút để nạp lại năng lượng nhé.");
-          switchPomoMode("short", 5);
-        } else {
-          showToast("⏰ Hết giờ nghỉ!", "Sẵn sàng quay lại phiên học tập tập trung tiếp theo.");
-          switchPomoMode("work", 25);
-        }
-      }
-    }, 1000);
+    pomoTimerInterval = setInterval(tickPopupPomo, 1000);
   }
 
   function pausePomoTimer() {
+    if (pomoIsRunning && pomoEndTime) {
+      pomoTimeLeft = Math.max(0, Math.ceil((pomoEndTime - Date.now()) / 1000));
+    }
     clearInterval(pomoTimerInterval);
     pomoIsRunning = false;
+    pomoEndTime = null;
     syncPomoState();
     updatePomoUI();
   }
@@ -959,20 +1033,34 @@
           b.classList.toggle("active", b.dataset.mode === pomoMode);
         });
 
+        const defaultSec = defaultPomoSeconds(pomoMode);
         if (res.pomoState.isRunning) {
-          const elapsed = Math.floor((Date.now() - (res.pomoState.updatedAt || Date.now())) / 1000);
-          pomoTimeLeft = Math.max(0, (res.pomoState.timeLeft || 25 * 60) - elapsed);
-          if (pomoTimeLeft > 0) {
-            startPomoTimer();
+          const targetEnd = res.pomoState.endTime
+            ? res.pomoState.endTime
+            : (res.pomoState.updatedAt || Date.now()) + (res.pomoState.timeLeft || defaultSec) * 1000;
+          if (targetEnd > Date.now()) {
+            pomoTimeLeft = Math.max(1, Math.ceil((targetEnd - Date.now()) / 1000));
+            startPomoTimer(targetEnd);
           } else {
-            pomoTimeLeft = 25 * 60;
-            updatePomoUI();
+            pomoIsRunning = true;
+            pomoEndTime = targetEnd;
+            ensurePopupWorker();
+            clearInterval(pomoTimerInterval);
+            pomoTimerInterval = setInterval(tickPopupPomo, 1000);
+            tickPopupPomo();
           }
         } else {
-          pomoTimeLeft = res.pomoState.timeLeft ?? 25 * 60;
+          pomoTimeLeft = res.pomoState.timeLeft ?? defaultSec;
           updatePomoUI();
         }
       }
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden && pomoIsRunning) tickPopupPomo();
+    });
+    window.addEventListener("focus", () => {
+      if (pomoIsRunning) tickPopupPomo();
     });
   }
 

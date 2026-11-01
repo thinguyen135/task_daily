@@ -1475,6 +1475,7 @@ function showToast(title,msg){
 var ac=null;
 function getAC(){
   if(!ac)try{ac=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}
+  if(ac&&ac.state==='suspended')try{ac.resume();}catch(e){}
   return ac;
 }
 
@@ -1635,19 +1636,50 @@ function tick(){
   setText('ddt',DAYS[n.getDay()]+', '+pad(n.getDate())+'/'+pad(n.getMonth()+1)+'/'+n.getFullYear());
   checkAlarms(n);
 }
-setInterval(tick,1000);tick();
+
+// ═══ BACKGROUND-SAFE HEARTBEAT (chống trình duyệt đóng băng tab ngầm) ═══
+function runAllHeartbeats(){
+  tick();
+  if(typeof mainPomoRunning!=='undefined'&&mainPomoRunning&&typeof tickMainPomo==='function')tickMainPomo();
+  if(typeof timerRunning!=='undefined'&&timerRunning&&typeof tickCountdownTimer==='function')tickCountdownTimer();
+}
+(function initBackgroundHeartbeat(){
+  try{
+    var workerCode='setInterval(function(){postMessage(1);},500);';
+    var blob=new Blob([workerCode],{type:'application/javascript'});
+    var workerUrl=URL.createObjectURL(blob);
+    var bgWorker=new Worker(workerUrl);
+    bgWorker.onmessage=runAllHeartbeats;
+  }catch(e){}
+  setInterval(runAllHeartbeats,1000);
+  document.addEventListener('visibilitychange',function(){
+    if(!document.hidden)runAllHeartbeats();
+  });
+  window.addEventListener('focus',runAllHeartbeats);
+  window.addEventListener('pageshow',runAllHeartbeats);
+})();
+tick();
 
 // ═══ TABS ═══
 function switchTab(name,el){
   document.querySelectorAll('.tb').forEach(function(b){b.classList.remove('act');});
   document.querySelectorAll('.pnl').forEach(function(p){p.classList.remove('act');});
-  el.classList.add('act');
-  getEl('pnl-'+name).classList.add('act');
+  if(el)el.classList.add('act');
+  var pnl=getEl('pnl-'+name);
+  if(pnl)pnl.classList.add('act');
   if(name==='home')renderPrinciples();
-  if(name==='month')renderMonth();
-  if(name==='year')renderYear();
-  if(name==='wheel'){renderWheelTickets();}
-  if(name==='pomodoro'){renderTaskSchedulesInPomo();updateMainPomoUI();renderMainBlockedSites();}
+  if(name==='month'&&typeof renderMonth==='function')renderMonth();
+  if(name==='year'&&typeof renderYear==='function')renderYear();
+  if(name==='wheel'){
+    if(typeof renderWheelTickets==='function')renderWheelTickets();
+    if(typeof timerRunning!=='undefined'&&timerRunning&&typeof tickCountdownTimer==='function')tickCountdownTimer();
+  }
+  if(name==='pomodoro'){
+    if(typeof renderTaskSchedulesInPomo==='function')renderTaskSchedulesInPomo();
+    if(typeof mainPomoRunning!=='undefined'&&mainPomoRunning&&typeof tickMainPomo==='function')tickMainPomo();
+    if(typeof updateMainPomoUI==='function')updateMainPomoUI();
+    if(typeof renderMainBlockedSites==='function')renderMainBlockedSites();
+  }
 }
 
 // ═══════════════════════════════════
@@ -2826,6 +2858,7 @@ function renderWheelTickets(){
 // ═══ COUNTDOWN TIMER ═══
 // ═══════════════════════════════════════
 var timerInterval=null;
+var timerEndTime=null;
 var timerRemaining=0;
 var timerTotal=0;
 var timerRunning=false;
@@ -2857,59 +2890,84 @@ function timerSetPreset(mins){
 }
 var timerRingInterval=null;
 
+function tickCountdownTimer(){
+  if(!timerRunning||!timerEndTime)return;
+  var nextRem=Math.max(0,Math.ceil((timerEndTime-Date.now())/1000));
+  if(nextRem===timerRemaining&&nextRem>0)return;
+  timerRemaining=nextRem;
+  var pct=timerTotal>0?Math.max(0,timerRemaining/timerTotal*100):0;
+  var disp=getEl('timerDisplay'),bar=getEl('timerBar');
+  if(disp)disp.textContent=timerFmt(timerRemaining);
+  if(bar)bar.style.width=pct+'%';
+  if(timerRemaining<=10&&timerRemaining>0){
+    if(disp)disp.className='timer-display urgent';
+    if(bar)bar.className='timer-progress-bar urgent';
+    setText('timerStatus','⚡ Sắp hết giờ!');
+  }
+  if(typeof syncDocumentTitle==='function')syncDocumentTitle();
+  if(timerRemaining<=0){
+    clearInterval(timerInterval);timerInterval=null;
+    timerRunning=false;timerEndTime=null;
+    if(disp){disp.textContent='00:00';disp.className='timer-display done';}
+    if(bar)bar.style.width='0%';
+    if(getEl('timerStartBtn')){
+      getEl('timerStartBtn').style.display='';
+      getEl('timerStartBtn').textContent='▶ BẮT ĐẦU';
+    }
+    if(getEl('timerPauseBtn'))getEl('timerPauseBtn').style.display='none';
+    setText('timerStatus','🔔 Hết giờ rồi!');
+    if(typeof syncDocumentTitle==='function')syncDocumentTitle();
+    showToast('⏰ Hết giờ!','Thời gian đếm ngược đã kết thúc!');
+    if(window.Notification&&Notification.permission==='granted'){
+      try{new Notification('⏰ Hết giờ đếm ngược!',{body:'Thời gian đếm ngược đã kết thúc!',icon:'icons/icon128.png'});}catch(e){}
+    }
+    // Kêu liên tục trong 15 giây
+    var ringCount=0;
+    timerRing();
+    timerRingInterval=setInterval(function(){
+      ringCount++;
+      if(ringCount>=5){clearInterval(timerRingInterval);timerRingInterval=null;return;}
+      timerRing();
+    },3000);
+  }
+}
+
 function timerStart(){
   var mins=parseInt(getEl('timerMinInput').value)||0;
   if(mins<1)return;
-  if(!timerRunning&&timerRemaining<=0){timerRemaining=mins*60;timerTotal=timerRemaining;}
+  if(timerRunning)return;
+  getAC();
+  if(window.Notification&&Notification.permission==='default'){
+    try{Notification.requestPermission();}catch(e){}
+  }
+  if(timerRemaining<=0){timerRemaining=mins*60;timerTotal=timerRemaining;}
   if(timerTotal===0)timerTotal=timerRemaining;
   if(timerRingInterval){clearInterval(timerRingInterval);timerRingInterval=null;}
+  clearInterval(timerInterval);
   timerRunning=true;
+  timerEndTime=Date.now()+timerRemaining*1000;
   getEl('timerStartBtn').style.display='none';
   getEl('timerPauseBtn').style.display='';
   getEl('timerStatus').textContent='⏱ Đang đếm ngược...';
-  timerInterval=setInterval(function(){
-    timerRemaining--;
-    var pct=timerTotal>0?Math.max(0,timerRemaining/timerTotal*100):0;
-    var disp=getEl('timerDisplay'),bar=getEl('timerBar');
-    disp.textContent=timerFmt(timerRemaining);
-    bar.style.width=pct+'%';
-    if(timerRemaining<=10&&timerRemaining>0){
-      disp.className='timer-display urgent';
-      bar.className='timer-progress-bar urgent';
-      getEl('timerStatus').textContent='⚡ Sắp hết giờ!';
-    }
-    if(timerRemaining<=0){
-      clearInterval(timerInterval);timerRunning=false;
-      disp.textContent='00:00';
-      disp.className='timer-display done';
-      bar.style.width='0%';
-      getEl('timerStartBtn').style.display='';
-      getEl('timerStartBtn').textContent='▶ BẮT ĐẦU';
-      getEl('timerPauseBtn').style.display='none';
-      getEl('timerStatus').textContent='🔔 Hết giờ rồi!';
-      showToast('⏰ Hết giờ!','Thời gian đếm ngược đã kết thúc!');
-      // Kêu liên tục trong 15 giây
-      var ringCount=0;
-      timerRing();
-      timerRingInterval=setInterval(function(){
-        ringCount++;
-        if(ringCount>=5){clearInterval(timerRingInterval);timerRingInterval=null;return;}
-        timerRing();
-      },3000);
-    }
-  },1000);
+  if(typeof syncDocumentTitle==='function')syncDocumentTitle();
 }
 function timerPause(){
-  clearInterval(timerInterval);timerRunning=false;
+  if(timerRunning&&timerEndTime){
+    timerRemaining=Math.max(0,Math.ceil((timerEndTime-Date.now())/1000));
+  }
+  clearInterval(timerInterval);timerInterval=null;
+  timerRunning=false;timerEndTime=null;
+  if(getEl('timerDisplay'))getEl('timerDisplay').textContent=timerFmt(timerRemaining);
   getEl('timerStartBtn').style.display='';
   getEl('timerStartBtn').textContent='▶ TIẾP TỤC';
   getEl('timerPauseBtn').style.display='none';
   getEl('timerStatus').textContent='⏸ Đã tạm dừng — nhấn Tiếp tục.';
+  if(typeof syncDocumentTitle==='function')syncDocumentTitle();
 }
 function timerReset(){
-  clearInterval(timerInterval);
+  clearInterval(timerInterval);timerInterval=null;
   if(timerRingInterval){clearInterval(timerRingInterval);timerRingInterval=null;}
-  timerRunning=false;
+  timerRunning=false;timerEndTime=null;
   var mins=parseInt(getEl('timerMinInput').value)||25;
   timerRemaining=mins*60;timerTotal=timerRemaining;
   getEl('timerDisplay').textContent=timerFmt(timerRemaining);
@@ -2920,6 +2978,7 @@ function timerReset(){
   getEl('timerStartBtn').textContent='▶ BẮT ĐẦU';
   getEl('timerPauseBtn').style.display='none';
   getEl('timerStatus').textContent='Đặt số phút và nhấn Bắt đầu!';
+  if(typeof syncDocumentTitle==='function')syncDocumentTitle();
 }
 function timerTickSound(){
   var c=getAC();if(!c)return;
@@ -3178,12 +3237,16 @@ document.addEventListener('keydown',function(e){
 // ═══ TAB POMODORO & TRÌNH CHẶN TRANG WEB TRONG GIỜ HỌC ═══
 // ══════════════════════════════════════════════════════════════
 var mainPomoInterval = null;
+var mainPomoEndTime = null;
 var mainPomoTimeLeft = 25 * 60;
 var mainPomoTotal = 25 * 60;
 var mainPomoMode = 'work';  // 'work' | 'short' | 'long' | 'custom'
 var mainPomoPhase = 'work'; // 'work' (Học tập) | 'break' (Giải lao)
 var mainPomoRunning = false;
 var mainPomoCompletedToday = 0;
+var pomoInstanceId = uid();
+var isSyncingFromStorage = false;
+var BASE_PAGE_TITLE = document.title || '✦ NOVA PLANNER ✦';
 var pomoCustomConfig = {
   workH: 0,
   workM: 50,
@@ -3232,6 +3295,29 @@ var pomoStorage = {
   }
 };
 
+function getDefaultMainPomoSec(mode, phase) {
+  if (mode === 'custom') {
+    var mins = phase === 'break'
+      ? Math.max(1, pomoCustomConfig.breakMins || 10)
+      : Math.max(1, pomoCustomConfig.workMins || 50);
+    return mins * 60;
+  }
+  if (mode === 'short') return 5 * 60;
+  if (mode === 'long') return 15 * 60;
+  return 25 * 60;
+}
+
+function syncDocumentTitle() {
+  if (mainPomoRunning) {
+    var isWork = mainPomoPhase === 'work';
+    document.title = (isWork ? '🍅 ' : '☕ ') + formatMainPomoTime(mainPomoTimeLeft) + (isWork ? ' · Học tập' : ' · Giải lao') + ' — Nova Planner';
+  } else if (typeof timerRunning !== 'undefined' && timerRunning) {
+    document.title = '⏱️ ' + timerFmt(timerRemaining) + ' — Nova Planner';
+  } else {
+    document.title = BASE_PAGE_TITLE;
+  }
+}
+
 function formatMainPomoTime(sec) {
   var h = Math.floor(sec / 3600);
   var m = Math.floor((sec % 3600) / 60);
@@ -3271,7 +3357,7 @@ function setMainPomoMode(mode, minutes, autoStart) {
     mainPomoTimeLeft = (minutes || 15) * 60;
   } else if (mode === 'custom') {
     mainPomoPhase = 'work';
-    mainPomoTimeLeft = (pomoCustomConfig.workMins || minutes || 50) * 60;
+    mainPomoTimeLeft = Math.max(1, pomoCustomConfig.workMins || minutes || 50) * 60;
   }
   mainPomoTotal = mainPomoTimeLeft;
 
@@ -3349,29 +3435,149 @@ function applyCustomPomoSettings() {
   );
 }
 
-function startMainPomo() {
-  if (mainPomoRunning) return;
-  mainPomoRunning = true;
+function tickMainPomo() {
+  if (!mainPomoRunning || !mainPomoEndTime) return;
+  var now = Date.now();
+  if (now < mainPomoEndTime) {
+    var nextLeft = Math.max(0, Math.ceil((mainPomoEndTime - now) / 1000));
+    if (nextLeft !== mainPomoTimeLeft) {
+      mainPomoTimeLeft = nextLeft;
+      updateMainPomoUI();
+    }
+    return;
+  }
+  handleMainPomoElapsed(now, false);
+}
+
+function handleMainPomoElapsed(now, isInitialRestore) {
+  if (!mainPomoEndTime) return;
+  // Nếu bỏ quên tab quá 12 tiếng thì dừng sạch sẽ thay vì lặp vô tận
+  if (now - mainPomoEndTime > 12 * 3600 * 1000) {
+    mainPomoRunning = false;
+    mainPomoEndTime = null;
+    mainPomoTimeLeft = getDefaultMainPomoSec(mainPomoMode, mainPomoPhase);
+    mainPomoTotal = mainPomoTimeLeft;
+    syncMainPomoState();
+    updateMainPomoUI();
+    return;
+  }
+
+  var workCompletedDelta = 0;
+  var lastFinishedPhase = null;
+  while (mainPomoEndTime <= now) {
+    lastFinishedPhase = mainPomoPhase;
+    if (mainPomoPhase === 'work') {
+      workCompletedDelta++;
+      mainPomoPhase = 'break';
+      if (mainPomoMode === 'custom') {
+        mainPomoTotal = Math.max(1, pomoCustomConfig.breakMins || 10) * 60;
+      } else {
+        mainPomoMode = 'short';
+        mainPomoTotal = 5 * 60;
+      }
+    } else {
+      mainPomoPhase = 'work';
+      if (mainPomoMode === 'custom') {
+        mainPomoTotal = Math.max(1, pomoCustomConfig.workMins || 50) * 60;
+      } else {
+        mainPomoMode = 'work';
+        mainPomoTotal = 25 * 60;
+      }
+    }
+    mainPomoEndTime += mainPomoTotal * 1000;
+  }
+
+  mainPomoTimeLeft = Math.max(1, Math.ceil((mainPomoEndTime - now) / 1000));
+
+  ['work', 'short', 'long', 'custom'].forEach(function(m) {
+    var btn = getEl('pbtn-' + m);
+    if (btn) btn.classList.toggle('act', m === mainPomoMode);
+  });
+
+  if (workCompletedDelta > 0) {
+    mainPomoCompletedToday += workCompletedDelta;
+    setText('pomoCompletedCount', mainPomoCompletedToday);
+    pomoStorage.set({
+      pomoCompletedCount: mainPomoCompletedToday,
+      pomoCompletedDate: todayKey()
+    });
+  }
+
+  if (!isInitialRestore) {
+    playPomoChime();
+    if (lastFinishedPhase === 'work') {
+      var nextBreakMins = mainPomoMode === 'custom' ? (pomoCustomConfig.breakMins || 10) : 5;
+      showToast(
+        '🎉 HOÀN THÀNH PHIÊN HỌC!',
+        'Tự động chuyển sang Giờ Nghỉ (' + formatMinsShort(nextBreakMins) + ').'
+      );
+      if (window.Notification && Notification.permission === 'granted') {
+        try {
+          new Notification('🎉 Hoàn thành phiên Học tập!', {
+            body: 'Tuyệt vời! Hệ thống tự động chuyển sang Giờ Nghỉ ' + formatMinsShort(nextBreakMins) + '.',
+            icon: 'icons/icon128.png'
+          });
+        } catch(e) {}
+      }
+    } else {
+      var nextWorkMins = mainPomoMode === 'custom' ? (pomoCustomConfig.workMins || 50) : 25;
+      showToast(
+        '⏰ HẾT GIỜ NGHỈ!',
+        'Tự động bắt đầu phiên Học tập tiếp theo (' + formatMinsShort(nextWorkMins) + ')!'
+      );
+      if (window.Notification && Notification.permission === 'granted') {
+        try {
+          new Notification('⏰ Hết giờ nghỉ ngơi!', {
+            body: 'Đã tự động bắt đầu phiên Học tập (' + formatMinsShort(nextWorkMins) + ')!',
+            icon: 'icons/icon128.png'
+          });
+        } catch(e) {}
+      }
+    }
+  } else if (workCompletedDelta > 0) {
+    showToast(
+      '🍅 Đồng bộ Pomodoro',
+      'Đã ghi nhận +' + workCompletedDelta + ' phiên học hoàn thành trong lúc bạn rời trang!'
+    );
+  }
+
   syncMainPomoState();
   updateMainPomoUI();
+}
+
+function startMainPomo(resumeEndTime) {
+  if (mainPomoRunning) return;
+  // Mở khóa AudioContext & quyền thông báo ngay từ thao tác bấm nút của người dùng
+  getAC();
+  if (typeof resumeEndTime !== 'number' && window.Notification && Notification.permission === 'default') {
+    try { Notification.requestPermission(); } catch(e) {}
+  }
+
+  if (mainPomoTimeLeft <= 0) {
+    mainPomoTimeLeft = getDefaultMainPomoSec(mainPomoMode, mainPomoPhase);
+    mainPomoTotal = mainPomoTimeLeft;
+  }
 
   clearInterval(mainPomoInterval);
-  mainPomoInterval = setInterval(function() {
-    if (mainPomoTimeLeft > 0) {
-      mainPomoTimeLeft--;
-      updateMainPomoUI();
-      if (mainPomoTimeLeft % 5 === 0) syncMainPomoState();
-    } else {
-      clearInterval(mainPomoInterval);
-      mainPomoRunning = false;
-      onMainPomoComplete();
-    }
-  }, 1000);
+  mainPomoInterval = null;
+  mainPomoRunning = true;
+  mainPomoEndTime = (typeof resumeEndTime === 'number' && resumeEndTime > Date.now())
+    ? resumeEndTime
+    : (Date.now() + mainPomoTimeLeft * 1000);
+  mainPomoTimeLeft = Math.max(0, Math.ceil((mainPomoEndTime - Date.now()) / 1000));
+
+  syncMainPomoState();
+  updateMainPomoUI();
 }
 
 function pauseMainPomo() {
+  if (mainPomoRunning && mainPomoEndTime) {
+    mainPomoTimeLeft = Math.max(0, Math.ceil((mainPomoEndTime - Date.now()) / 1000));
+  }
   clearInterval(mainPomoInterval);
+  mainPomoInterval = null;
   mainPomoRunning = false;
+  mainPomoEndTime = null;
   syncMainPomoState();
   updateMainPomoUI();
 }
@@ -3380,7 +3586,7 @@ function resetMainPomo() {
   pauseMainPomo();
   if (mainPomoMode === 'custom') {
     mainPomoPhase = 'work';
-    mainPomoTimeLeft = (pomoCustomConfig.workMins || 50) * 60;
+    mainPomoTimeLeft = Math.max(1, pomoCustomConfig.workMins || 50) * 60;
   } else if (mainPomoMode === 'short') {
     mainPomoPhase = 'break';
     mainPomoTimeLeft = 5 * 60;
@@ -3403,7 +3609,7 @@ function skipMainPomo() {
     // Chuyển từ Học sang Nghỉ
     mainPomoPhase = 'break';
     if (mainPomoMode === 'custom') {
-      mainPomoTimeLeft = (pomoCustomConfig.breakMins || 10) * 60;
+      mainPomoTimeLeft = Math.max(1, pomoCustomConfig.breakMins || 10) * 60;
       mainPomoTotal = mainPomoTimeLeft;
     } else {
       mainPomoMode = 'short';
@@ -3418,7 +3624,7 @@ function skipMainPomo() {
     // Chuyển từ Nghỉ sang Học
     mainPomoPhase = 'work';
     if (mainPomoMode === 'custom') {
-      mainPomoTimeLeft = (pomoCustomConfig.workMins || 50) * 60;
+      mainPomoTimeLeft = Math.max(1, pomoCustomConfig.workMins || 50) * 60;
       mainPomoTotal = mainPomoTimeLeft;
     } else {
       mainPomoMode = 'work';
@@ -3457,73 +3663,11 @@ function playPomoChime() {
   });
 }
 
-// Khi hoàn thành 1 phiên: tự động chuyển pha Học ⇄ Nghỉ và tự động chạy tiếp liên tục
+// Giữ tương thích ngược nếu có nơi gọi onMainPomoComplete()
 function onMainPomoComplete() {
-  playPomoChime();
-
-  if (mainPomoPhase === 'work') {
-    mainPomoCompletedToday++;
-    setText('pomoCompletedCount', mainPomoCompletedToday);
-    pomoStorage.set({ pomoCompletedCount: mainPomoCompletedToday });
-
-    var nextBreakMins = mainPomoMode === 'custom' ? (pomoCustomConfig.breakMins || 10) : 5;
-    showToast(
-      '🎉 HOÀN THÀNH PHIÊN HỌC!',
-      'Tự động chuyển sang Giờ Nghỉ (' + formatMinsShort(nextBreakMins) + ').'
-    );
-
-    if (window.Notification && Notification.permission === 'granted') {
-      new Notification('🎉 Hoàn thành phiên Học tập!', {
-        body: 'Tuyệt vời! Hệ thống tự động chuyển sang Giờ Nghỉ ' + formatMinsShort(nextBreakMins) + '.',
-        icon: 'icons/icon128.png'
-      });
-    }
-
-    // Tự động chuyển sang pha Nghỉ và chạy luôn
-    mainPomoPhase = 'break';
-    if (mainPomoMode === 'custom') {
-      mainPomoTimeLeft = nextBreakMins * 60;
-      mainPomoTotal = mainPomoTimeLeft;
-    } else {
-      mainPomoMode = 'short';
-      mainPomoTimeLeft = 5 * 60;
-      mainPomoTotal = mainPomoTimeLeft;
-      ['work', 'short', 'long', 'custom'].forEach(function(m) {
-        var btn = getEl('pbtn-' + m);
-        if (btn) btn.classList.toggle('act', m === 'short');
-      });
-    }
-    startMainPomo();
-  } else {
-    var nextWorkMins = mainPomoMode === 'custom' ? (pomoCustomConfig.workMins || 50) : 25;
-    showToast(
-      '⏰ HẾT GIỜ NGHỈ!',
-      'Tự động bắt đầu phiên Học tập tiếp theo (' + formatMinsShort(nextWorkMins) + ')!'
-    );
-
-    if (window.Notification && Notification.permission === 'granted') {
-      new Notification('⏰ Hết giờ nghỉ ngơi!', {
-        body: 'Đã tự động bắt đầu phiên Học tập (' + formatMinsShort(nextWorkMins) + ')!',
-        icon: 'icons/icon128.png'
-      });
-    }
-
-    // Tự động chuyển sang pha Học và chạy luôn
-    mainPomoPhase = 'work';
-    if (mainPomoMode === 'custom') {
-      mainPomoTimeLeft = nextWorkMins * 60;
-      mainPomoTotal = mainPomoTimeLeft;
-    } else {
-      mainPomoMode = 'work';
-      mainPomoTimeLeft = 25 * 60;
-      mainPomoTotal = mainPomoTimeLeft;
-      ['work', 'short', 'long', 'custom'].forEach(function(m) {
-        var btn = getEl('pbtn-' + m);
-        if (btn) btn.classList.toggle('act', m === 'work');
-      });
-    }
-    startMainPomo();
-  }
+  mainPomoRunning = true;
+  mainPomoEndTime = Date.now();
+  handleMainPomoElapsed(Date.now(), false);
 }
 
 function updateMainPomoUI() {
@@ -3551,8 +3695,15 @@ function updateMainPomoUI() {
   var statusEl = getEl('mainPomoStatus');
   var badgeEl = getEl('pomoActiveBadge');
   var badgeText = getEl('pomoActiveText');
+  var tbPomoEl = getEl('tbPomo');
 
   var isWork = mainPomoPhase === 'work';
+
+  if (tbPomoEl) {
+    tbPomoEl.textContent = mainPomoRunning
+      ? ((isWork ? '🍅 ' : '☕ ') + formatMainPomoTime(mainPomoTimeLeft))
+      : '🍅 Pomodoro';
+  }
 
   if (statusEl) {
     if (mainPomoRunning) {
@@ -3581,67 +3732,138 @@ function updateMainPomoUI() {
       badgeText.textContent = mainPomoRunning ? 'GIỜ GIẢI LAO' : 'SẴN SÀNG';
     }
   }
+
+  syncDocumentTitle();
 }
 
 function syncMainPomoState() {
+  if (isSyncingFromStorage) return;
+  var currentLeft = (mainPomoRunning && mainPomoEndTime)
+    ? Math.max(0, Math.ceil((mainPomoEndTime - Date.now()) / 1000))
+    : mainPomoTimeLeft;
   pomoStorage.set({
     pomoState: {
       isRunning: mainPomoRunning,
       currentMode: mainPomoMode,
       currentPhase: mainPomoPhase,
-      timeLeft: mainPomoTimeLeft,
+      timeLeft: currentLeft,
       totalTime: mainPomoTotal,
+      endTime: mainPomoRunning ? mainPomoEndTime : null,
+      sourceId: pomoInstanceId,
       updatedAt: Date.now()
     }
   });
 }
 
-function initMainPomoAndBlocker() {
-  pomoStorage.get(['pomoState', 'pomoCompletedCount', 'pomoCustomConfig'], function(res) {
-    if (res.pomoCompletedCount) {
-      mainPomoCompletedToday = res.pomoCompletedCount;
-      setText('pomoCompletedCount', mainPomoCompletedToday);
+function applyStoredPomoState(state, isInitial) {
+  if (!state) {
+    updateMainPomoUI();
+    return;
+  }
+  isSyncingFromStorage = true;
+  try {
+    mainPomoMode = state.currentMode || 'work';
+    mainPomoPhase = state.currentPhase || ((mainPomoMode === 'short' || mainPomoMode === 'long') ? 'break' : 'work');
+    ['work', 'short', 'long', 'custom'].forEach(function(m) {
+      var btn = getEl('pbtn-' + m);
+      if (btn) btn.classList.toggle('act', m === mainPomoMode);
+    });
+
+    var defaultTotal = getDefaultMainPomoSec(mainPomoMode, mainPomoPhase);
+    mainPomoTotal = state.totalTime || defaultTotal;
+
+    if (state.isRunning) {
+      var targetEnd = state.endTime
+        ? state.endTime
+        : ((state.updatedAt || Date.now()) + (state.timeLeft || defaultTotal) * 1000);
+      mainPomoRunning = true;
+      mainPomoEndTime = targetEnd;
+      var now = Date.now();
+      if (now >= mainPomoEndTime) {
+        isSyncingFromStorage = false;
+        handleMainPomoElapsed(now, !!isInitial);
+        return;
+      }
+      mainPomoTimeLeft = Math.max(0, Math.ceil((mainPomoEndTime - now) / 1000));
+      updateMainPomoUI();
+    } else {
+      mainPomoRunning = false;
+      mainPomoEndTime = null;
+      mainPomoTimeLeft = (typeof state.timeLeft === 'number' && state.timeLeft > 0) ? state.timeLeft : defaultTotal;
+      updateMainPomoUI();
     }
+  } finally {
+    isSyncingFromStorage = false;
+  }
+}
+
+function initMainPomoAndBlocker() {
+  pomoStorage.get(['pomoState', 'pomoCompletedCount', 'pomoCompletedDate', 'pomoCustomConfig'], function(res) {
+    if (res.pomoCompletedDate && res.pomoCompletedDate !== todayKey()) {
+      mainPomoCompletedToday = 0;
+      pomoStorage.set({ pomoCompletedCount: 0, pomoCompletedDate: todayKey() });
+    } else if (res.pomoCompletedCount) {
+      mainPomoCompletedToday = res.pomoCompletedCount;
+    }
+    setText('pomoCompletedCount', mainPomoCompletedToday);
 
     if (res.pomoCustomConfig && res.pomoCustomConfig.workMins) {
       pomoCustomConfig = res.pomoCustomConfig;
     }
     updateCustomButtonLabel();
 
-    if (res.pomoState) {
-      mainPomoMode = res.pomoState.currentMode || 'work';
-      mainPomoPhase = res.pomoState.currentPhase || ((mainPomoMode === 'short' || mainPomoMode === 'long') ? 'break' : 'work');
-      ['work', 'short', 'long', 'custom'].forEach(function(m) {
-        var btn = getEl('pbtn-' + m);
-        if (btn) btn.classList.toggle('act', m === mainPomoMode);
-      });
+    applyStoredPomoState(res.pomoState, true);
+  });
 
-      var defaultTotal = (mainPomoMode === 'custom'
-        ? (mainPomoPhase === 'work' ? pomoCustomConfig.workMins : pomoCustomConfig.breakMins)
-        : (mainPomoMode === 'short' ? 5 : (mainPomoMode === 'long' ? 15 : 25))) * 60;
-      mainPomoTotal = res.pomoState.totalTime || defaultTotal;
-
-      if (res.pomoState.isRunning) {
-        var elapsed = Math.floor((Date.now() - (res.pomoState.updatedAt || Date.now())) / 1000);
-        mainPomoTimeLeft = Math.max(0, (res.pomoState.timeLeft || defaultTotal) - elapsed);
-        if (mainPomoTimeLeft > 0) {
-          startMainPomo();
-        } else {
-          mainPomoTimeLeft = defaultTotal;
-          updateMainPomoUI();
+  // Đồng bộ thời gian thực giữa nhiều tab trình duyệt
+  window.addEventListener('storage', function(e) {
+    if (e.key === 'pomoState' && e.newValue) {
+      try {
+        var parsed = JSON.parse(e.newValue);
+        if (parsed && parsed.sourceId !== pomoInstanceId) {
+          applyStoredPomoState(parsed, false);
         }
-      } else {
-        mainPomoTimeLeft = res.pomoState.timeLeft || defaultTotal;
-        updateMainPomoUI();
-      }
-    } else {
-      updateMainPomoUI();
+      } catch(err) {}
+    } else if (e.key === 'pomoCompletedCount' && e.newValue) {
+      try {
+        mainPomoCompletedToday = JSON.parse(e.newValue) || 0;
+        setText('pomoCompletedCount', mainPomoCompletedToday);
+      } catch(err) {}
+    } else if (e.key === 'pomoCustomConfig' && e.newValue) {
+      try {
+        var cfg = JSON.parse(e.newValue);
+        if (cfg && cfg.workMins) {
+          pomoCustomConfig = cfg;
+          updateCustomButtonLabel();
+        }
+      } catch(err) {}
     }
   });
 
-  if (window.Notification && Notification.permission === 'default') {
-    try { Notification.requestPermission(); } catch(e) {}
+  // Đồng bộ với Chrome Extension popup / background nếu chạy trong extension
+  if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.onChanged) {
+    chrome.storage.onChanged.addListener(function(changes, area) {
+      if (area !== 'local') return;
+      if (changes.pomoCustomConfig && changes.pomoCustomConfig.newValue) {
+        pomoCustomConfig = changes.pomoCustomConfig.newValue;
+        updateCustomButtonLabel();
+      }
+      if (changes.pomoCompletedCount && typeof changes.pomoCompletedCount.newValue === 'number') {
+        mainPomoCompletedToday = changes.pomoCompletedCount.newValue;
+        setText('pomoCompletedCount', mainPomoCompletedToday);
+      }
+      if (changes.pomoState && changes.pomoState.newValue) {
+        var st = changes.pomoState.newValue;
+        if (st.sourceId !== pomoInstanceId) {
+          applyStoredPomoState(st, false);
+        }
+      }
+    });
   }
+
+  window.addEventListener('pagehide', function() {
+    if (mainPomoRunning) syncMainPomoState();
+  });
 }
 
 // ═══ INIT ═══
