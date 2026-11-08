@@ -657,6 +657,23 @@ select option{background:#0c0c1e;}
   50% { opacity: 0.4; transform: scale(1.3); }
 }
 
+/* ═══ TAB GHI CHÚ ═══ */
+.note-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-top:12px;}
+.note-card{position:relative;display:flex;flex-direction:column;gap:8px;padding:14px 14px 12px;border-radius:14px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.09);border-top:3px solid var(--nc,var(--c1));transition:transform .2s,box-shadow .2s,border-color .2s;min-height:120px;}
+.note-card:hover{transform:translateY(-2px);box-shadow:0 6px 22px rgba(0,0,0,.35);}
+.note-card.pinned{box-shadow:0 0 14px rgba(255,225,0,.12);border-color:rgba(255,225,0,.3);border-top-color:var(--nc,var(--c1));}
+.note-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+.note-title{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;letter-spacing:.5px;color:var(--nc,var(--c1));word-break:break-word;line-height:1.4;}
+.note-pin{background:none;border:none;cursor:pointer;font-size:15px;line-height:1;flex-shrink:0;color:rgba(255,255,255,.3);}
+.note-body{font-size:13px;color:var(--txt);line-height:1.6;white-space:pre-wrap;word-break:break-word;flex:1;max-height:220px;overflow:auto;}
+.note-foot{display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;margin-top:2px;}
+.note-date{font-family:'Space Mono',monospace;font-size:9px;color:var(--mut);letter-spacing:.5px;}
+.note-acts{display:flex;gap:5px;}
+.note-colors{display:flex;gap:7px;align-items:center;flex-wrap:wrap;padding-top:4px;}
+.note-color{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .15s;}
+.note-color:hover{transform:scale(1.12);}
+.note-color.on{border-color:#fff;box-shadow:0 0 8px rgba(255,255,255,.4);}
+
 </style>
 </head>
 <body>
@@ -870,6 +887,7 @@ select option{background:#0c0c1e;}
     <button class="tb" onclick="switchTab('day',this)">📅 Ngày</button>
     <button class="tb" onclick="switchTab('wheel',this)" id="tbWheel">🎡 Quay</button>
     <button class="tb" onclick="switchTab('pomodoro',this)" id="tbPomo">🍅 Pomodoro</button>
+    <button class="tb" onclick="switchTab('notes',this)" id="tbNotes">📝 Ghi chú</button>
   </div>
   <div style="display:flex;justify-content:flex-end;margin:-8px 0 10px;">
     <div class="ticket-badge" onclick="switchTab('wheel',document.getElementById('tbWheel'))" title="Vé quay thưởng">
@@ -1010,6 +1028,42 @@ select option{background:#0c0c1e;}
       <div class="tlist" id="taskList">
         <div class="es"><div class="ei">🚀</div><div class="et">Chưa có — hãy bắt đầu!</div></div>
       </div>
+    </div>
+  </div>
+
+  <!-- ══ TAB GHI CHÚ ══ -->
+  <div class="pnl" id="pnl-notes">
+    <div class="srow">
+      <div class="sb"><div class="sv" id="ntCount">0</div><div class="sl">Ghi chú</div></div>
+      <div class="sb"><div class="sv" id="ntPinCount" style="color:var(--c3)">0</div><div class="sl">Đã ghim 📌</div></div>
+      <div class="sb"><div class="sv" id="ntTodayCount" style="color:var(--c4)">0</div><div class="sl">Hôm nay</div></div>
+    </div>
+    <div class="card kpurple">
+      <div class="ct pu" id="ntFormTitle">📝 THÊM GHI CHÚ MỚI</div>
+      <input type="hidden" id="ntEditId" value="" />
+      <div class="fr">
+        <div class="fg"><label class="fl">Tiêu đề</label>
+          <input type="text" id="ntTitle" placeholder="Ví dụ: Ý tưởng dự án, việc cần nhớ..." maxlength="120"/></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label class="fl">Nội dung *</label>
+          <textarea id="ntContent" rows="5" placeholder="Viết ghi chú của bạn... (Ctrl + Enter để lưu)"></textarea></div>
+      </div>
+      <div class="fr" style="align-items:center;">
+        <div class="fg"><label class="fl">Màu thẻ</label>
+          <div class="note-colors" id="ntColors"></div></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:6px;">
+        <button class="btn bpu" id="ntSaveBtn" style="flex:1;" onclick="saveNote()">✦ LƯU GHI CHÚ</button>
+        <button class="btn bgh" id="ntCancelBtn" style="display:none;" onclick="cancelEditNote()">✕ Hủy sửa</button>
+      </div>
+    </div>
+    <div class="card kpurple">
+      <div class="ct pu" style="justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <span>🗂️ DANH SÁCH GHI CHÚ</span>
+        <input type="text" id="ntSearch" placeholder="🔍 Tìm ghi chú..." oninput="renderNotes()" style="max-width:220px;padding:6px 10px;font-size:12px;"/>
+      </div>
+      <div class="note-grid" id="noteList"></div>
     </div>
   </div>
 
@@ -1428,7 +1482,8 @@ var D={tasks:{},dayNotes:{},monthGoals:{},yearGoals:{},habits:{},moods:{},monthR
   tickets:0,
   spinHistory:[],
   prizes:[],
-  principles:[]
+  principles:[],
+  notes:[]
 };
 
 function loadD(){
@@ -1440,7 +1495,7 @@ function loadD(){
   try{
     if(window.storage&&window.storage.get){
       window.storage.get(SK).then(function(r){
-        if(r&&r.value){var parsed=JSON.parse(r.value);Object.keys(parsed).forEach(function(k){D[k]=parsed[k];});renderTasks();renderPrinciples();}
+        if(r&&r.value){var parsed=JSON.parse(r.value);Object.keys(parsed).forEach(function(k){D[k]=parsed[k];});renderTasks();renderPrinciples();if(typeof renderNotes==='function')renderNotes();}
       }).catch(function(){});
     }
   }catch(e){}
@@ -1501,6 +1556,36 @@ function playAlarmBell(){
   gb.gain.setValueAtTime(.15,c.currentTime);
   gb.gain.exponentialRampToValueAtTime(.001,c.currentTime+.9);
   ob.start(c.currentTime);ob.stop(c.currentTime+.9);
+}
+
+// Tiếng chuông giờ bắt đầu — chuông ngân vang khoảng 3 giây
+var START_BELL_SECONDS=3;
+function playStartBell(){
+  var c=getAC();if(!c)return;
+  var t0=c.currentTime+.02;
+  var end=t0+START_BELL_SECONDS;
+  var master=c.createGain();
+  master.connect(c.destination);
+  master.gain.setValueAtTime(.9,t0);
+  master.gain.setValueAtTime(.9,end-.35);
+  master.gain.linearRampToValueAtTime(0,end);
+  // 4 lần gõ chuông (ding-dong) trải đều trong 3 giây
+  var strikes=[{f:880,t:0},{f:659,t:.75},{f:880,t:1.5},{f:659,t:2.25}];
+  // Các họa âm tạo âm sắc chuông kim loại
+  var partials=[{r:1,a:.32,d:1.1},{r:2,a:.14,d:.8},{r:2.76,a:.08,d:.55},{r:5.4,a:.04,d:.3}];
+  strikes.forEach(function(s){
+    var st=t0+s.t;
+    partials.forEach(function(p){
+      var o=c.createOscillator(),g=c.createGain();
+      o.connect(g);g.connect(master);
+      o.type='sine';o.frequency.value=s.f*p.r;
+      var stop=Math.min(st+p.d,end);
+      g.gain.setValueAtTime(0,st);
+      g.gain.linearRampToValueAtTime(p.a,st+.008);
+      g.gain.exponentialRampToValueAtTime(.0008,stop);
+      o.start(st);o.stop(stop+.02);
+    });
+  });
 }
 
 // Tiếng kết thúc báo động — nhẹ nhàng, vui
@@ -1664,6 +1749,7 @@ function switchTab(name,el){
   var pnl=getEl('pnl-'+name);
   if(pnl)pnl.classList.add('act');
   if(name==='home')renderPrinciples();
+  if(name==='notes'&&typeof renderNotes==='function')renderNotes();
   if(name==='month'&&typeof renderMonth==='function')renderMonth();
   if(name==='year'&&typeof renderYear==='function')renderYear();
   if(name==='wheel'){
@@ -1795,10 +1881,11 @@ function renderTasks(){
   list.innerHTML=html;
 }
 
-// Thông báo giờ bắt đầu: toast + thông báo hệ thống, không có âm thanh
+// Thông báo giờ bắt đầu: toast + thông báo hệ thống + chuông ngân khoảng 3 giây
 function notifyTaskStart(t){
   var range=(t.startTime||t.time)+(t.endTime?' - '+t.endTime:'');
   showToast('⏰ Đến giờ bắt đầu: '+esc(t.name),'Khung giờ '+range+'. Chúc bạn tập trung!');
+  playStartBell();
   if(window.Notification&&Notification.permission==='granted'){
     try{new Notification('⏰ Đến giờ bắt đầu: '+t.name,{body:'Khung giờ '+range,icon:'icons/icon128.png',silent:true});}catch(e){}
   }
@@ -1812,7 +1899,7 @@ function checkAlarms(now){
     var startT=t.startTime||t.time;
     var endT=t.endTime||'';
     if(endT){
-      // Giờ bắt đầu: chỉ thông báo, KHÔNG phát âm thanh
+      // Giờ bắt đầu: thông báo + phát chuông ngân khoảng 3 giây (không lặp)
       if(startT&&startT===hm&&alarmSet.indexOf(t.id+':start')<0){
         alarmSet.push(t.id+':start');
         notifyTaskStart(t);
@@ -3216,6 +3303,161 @@ function deletePrinciple(id){
   showToast('🗑️ Đã xóa', 'Nguyên tắc đã được gỡ bỏ.');
 }
 
+// ═══════════════════════════════════
+// ═══ TAB GHI CHÚ ═══
+// ═══════════════════════════════════
+var NOTE_COLORS=['#00f5ff','#ff00c8','#ffe100','#39ff14','#ff6b35','#a855f7'];
+var ntColor=NOTE_COLORS[0];
+
+function initNotes(){
+  if(!D.notes||!Array.isArray(D.notes))D.notes=[];
+}
+
+function fmtNoteDate(ts){
+  if(!ts)return '';
+  var d=new Date(ts);
+  return pad(d.getHours())+':'+pad(d.getMinutes())+' · '+pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear();
+}
+
+function renderNoteColors(){
+  var box=getEl('ntColors');if(!box)return;
+  var html='';
+  NOTE_COLORS.forEach(function(col){
+    html+='<div class="note-color'+(col===ntColor?' on':'')+'" style="background:'+col+'" title="Chọn màu" onclick="pickNoteColor(\''+col+'\')"></div>';
+  });
+  box.innerHTML=html;
+}
+
+function pickNoteColor(col){
+  ntColor=col;
+  renderNoteColors();
+}
+
+function renderNotes(){
+  initNotes();
+  renderNoteColors();
+  var list=D.notes;
+  var today=todayKey();
+  setText('ntCount',list.length);
+  setText('ntPinCount',list.filter(function(n){return n.pinned;}).length);
+  setText('ntTodayCount',list.filter(function(n){
+    var d=new Date(n.updatedAt||n.createdAt||0);
+    return dKey(d.getFullYear(),d.getMonth()+1,d.getDate())===today;
+  }).length);
+
+  var box=getEl('noteList');if(!box)return;
+  var q=(getVal('ntSearch')||'').trim().toLowerCase();
+  var filtered=list.filter(function(n){
+    if(!q)return true;
+    return (n.title||'').toLowerCase().indexOf(q)>=0||(n.content||'').toLowerCase().indexOf(q)>=0;
+  });
+  filtered.sort(function(a,b){
+    if(a.pinned&&!b.pinned)return -1;
+    if(!a.pinned&&b.pinned)return 1;
+    return (b.updatedAt||b.createdAt||0)-(a.updatedAt||a.createdAt||0);
+  });
+
+  if(!filtered.length){
+    box.innerHTML='<div class="es" style="grid-column:1/-1;padding:24px 10px;"><div class="ei">📝</div><div class="et">'+(q?'Không tìm thấy ghi chú phù hợp.':'Chưa có ghi chú nào — hãy viết ghi chú đầu tiên!')+'</div></div>';
+    return;
+  }
+
+  var html='';
+  filtered.forEach(function(n){
+    var col=n.color||NOTE_COLORS[0];
+    html+='<div class="note-card'+(n.pinned?' pinned':'')+'" style="--nc:'+col+'">';
+    html+='<div class="note-head">';
+    html+='<div class="note-title">'+esc(n.title||'Ghi chú')+'</div>';
+    html+='<button class="note-pin" title="'+(n.pinned?'Bỏ ghim':'Ghim lên đầu')+'" onclick="togglePinNote(\''+n.id+'\')" style="'+(n.pinned?'color:#ffe100;':'')+'">'+(n.pinned?'📌':'📍')+'</button>';
+    html+='</div>';
+    html+='<div class="note-body">'+esc(n.content||'')+'</div>';
+    html+='<div class="note-foot">';
+    html+='<span class="note-date">'+(n.updatedAt&&n.updatedAt!==n.createdAt?'✏️ ':'🕒 ')+fmtNoteDate(n.updatedAt||n.createdAt)+'</span>';
+    html+='<div class="note-acts">';
+    html+='<button class="btn byl bxs" onclick="editNote(\''+n.id+'\')">✏️ Sửa</button>';
+    html+='<button class="btn bdel bxs" onclick="deleteNote(\''+n.id+'\')">✕ Xóa</button>';
+    html+='</div></div>';
+    html+='</div>';
+  });
+  box.innerHTML=html;
+}
+
+function findNote(id){
+  initNotes();
+  for(var i=0;i<D.notes.length;i++)if(D.notes[i].id===id)return D.notes[i];
+  return null;
+}
+
+function saveNote(){
+  initNotes();
+  var title=getVal('ntTitle').trim();
+  var content=getVal('ntContent').trim();
+  if(!content){flashEl('ntContent');showToast('Thiếu nội dung','Vui lòng nhập nội dung ghi chú!');return;}
+  var editId=getVal('ntEditId');
+  var now=Date.now();
+  if(editId){
+    var item=findNote(editId);
+    if(item){
+      item.title=title;item.content=content;item.color=ntColor;item.updatedAt=now;
+      showToast('✏️ Đã cập nhật','Ghi chú đã được chỉnh sửa.');
+    }
+    cancelEditNote();
+  } else {
+    D.notes.push({id:uid(),title:title,content:content,color:ntColor,pinned:false,createdAt:now,updatedAt:now});
+    setVal('ntTitle','');setVal('ntContent','');
+    showToast('📝 Đã lưu ghi chú',title?esc(title):'Ghi chú mới đã được lưu.');
+    playAdd();
+  }
+  saveD();
+  renderNotes();
+}
+
+function editNote(id){
+  var item=findNote(id);if(!item)return;
+  setVal('ntEditId',item.id);
+  setVal('ntTitle',item.title||'');
+  setVal('ntContent',item.content||'');
+  ntColor=item.color||NOTE_COLORS[0];
+  renderNoteColors();
+  setText('ntFormTitle','✏️ CHỈNH SỬA GHI CHÚ');
+  setText('ntSaveBtn','✦ LƯU THAY ĐỔI');
+  getEl('ntCancelBtn').style.display='';
+  var inp=getEl('ntContent');
+  if(inp){inp.focus();inp.scrollIntoView({behavior:'smooth',block:'center'});}
+}
+
+function cancelEditNote(){
+  setVal('ntEditId','');setVal('ntTitle','');setVal('ntContent','');
+  ntColor=NOTE_COLORS[0];
+  renderNoteColors();
+  setText('ntFormTitle','📝 THÊM GHI CHÚ MỚI');
+  setText('ntSaveBtn','✦ LƯU GHI CHÚ');
+  getEl('ntCancelBtn').style.display='none';
+}
+
+function togglePinNote(id){
+  var item=findNote(id);if(!item)return;
+  item.pinned=!item.pinned;
+  saveD();renderNotes();
+}
+
+function deleteNote(id){
+  var item=findNote(id);if(!item)return;
+  var label=item.title||(item.content||'').slice(0,40);
+  if(!confirm('Bạn có chắc muốn xóa ghi chú này không?\n\n"'+label+'"'))return;
+  if(getVal('ntEditId')===id)cancelEditNote();
+  D.notes=D.notes.filter(function(n){return n.id!==id;});
+  saveD();renderNotes();
+  showToast('🗑️ Đã xóa','Ghi chú đã được gỡ bỏ.');
+}
+
+// Ctrl + Enter trong ô nội dung ghi chú để lưu nhanh
+document.addEventListener('keydown',function(e){
+  if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)&&document.activeElement&&document.activeElement.id==='ntContent'){
+    e.preventDefault();saveNote();
+  }
+});
+
 // ═══ ENTER KEY ═══
 document.addEventListener('keydown',function(e){
   if(e.key==='Enter'&&!e.shiftKey){
@@ -3226,6 +3468,7 @@ document.addEventListener('keydown',function(e){
     else if(getEl('moRev').classList.contains('open')){}
     else if(document.activeElement&&document.activeElement.id==='tName')addTask();
     else if(document.activeElement&&document.activeElement.id==='prInput')savePrinciple();
+    else if(document.activeElement&&document.activeElement.id==='ntTitle'){e.preventDefault();getEl('ntContent').focus();}
   }
 });
 
@@ -3873,6 +4116,7 @@ renderPrinciples();
 renderTasks();
 initCal();
 initMainPomoAndBlocker();
+initNotes();renderNotes();
 var c=getEl('wheelCanvas');if(c)drawWheel(0);
 updateTicketDisplay();
 renderStreakUI();
