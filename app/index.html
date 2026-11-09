@@ -493,6 +493,15 @@ select option{background:#0c0c1e;}
 .streak-day.empty{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);}
 .streak-day-lbl{font-family:'Space Mono',monospace;font-size:7px;color:rgba(255,255,255,.3);
   position:absolute;bottom:-13px;left:50%;transform:translateX(-50%);white-space:nowrap;}
+.streak-checkin{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;}
+.streak-btn{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;letter-spacing:1px;
+  padding:8px 16px;border-radius:20px;cursor:pointer;transition:all .2s;
+  background:linear-gradient(135deg,#ff6b00,#ff3800);color:#fff;border:1px solid rgba(255,140,66,.8);
+  box-shadow:0 0 14px rgba(255,107,0,.45);}
+.streak-btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 0 22px rgba(255,107,0,.7);}
+.streak-btn:disabled{cursor:not-allowed;background:rgba(255,255,255,.05);color:rgba(255,255,255,.35);
+  border:1px solid rgba(255,255,255,.12);box-shadow:none;}
+.streak-hint{font-family:'Space Mono',monospace;font-size:10px;color:rgba(255,180,100,.6);}
 
 /* ── TICKET BADGE ── */
 .ticket-badge{display:inline-flex;align-items:center;gap:6px;
@@ -990,6 +999,10 @@ select option{background:#0c0c1e;}
         </div>
       </div>
       <div class="streak-chain" id="streakChain"></div>
+      <div class="streak-checkin">
+        <button class="streak-btn" id="streakBtn" onclick="checkInStreak()" disabled>🔒 Mở lúc 23:00</button>
+        <span class="streak-hint" id="streakHint">Tự xác nhận hoàn thành ngày · chỉ mở 23:00 – 24:00</span>
+      </div>
     </div>
     <div class="srow">
       <div class="sb"><div class="sv" id="stT">0</div><div class="sl">Tổng</div></div>
@@ -2610,10 +2623,16 @@ function renderYRevDisplay(){
 // ═══════════════════════════════════════
 // ═══ STREAK SYSTEM ═══
 // ═══════════════════════════════════════
+// Giờ mở nút tự xác nhận chuỗi lửa: 23:00 – 23:59
+var STREAK_OPEN_HOUR=23;
+function isStreakWindowOpen(){
+  return new Date().getHours()>=STREAK_OPEN_HOUR;
+}
+
+// Chỉ kiểm tra đứt chuỗi; việc cộng chuỗi do người dùng tự xác nhận (checkInStreak)
 function checkAndUpdateStreak(tasks, done, tot){
   if(!D.streak)D.streak={count:0,best:0,lastDate:'',history:[]};
   var today=todayKey();
-  var allDone=(tot>0&&done===tot);
 
   // Check if we missed a day (lastDate is not today or yesterday)
   if(D.streak.lastDate&&D.streak.lastDate!==today){
@@ -2625,26 +2644,34 @@ function checkAndUpdateStreak(tasks, done, tot){
       D.streak.count=0;
     }
   }
+}
 
-  if(allDone){
-    if(D.streak.lastDate!==today){
-      // New day completion
-      D.streak.count=(D.streak.count||0)+1;
-      D.streak.lastDate=today;
-      if(D.streak.count>(D.streak.best||0))D.streak.best=D.streak.count;
-      // Add to history
-      if(!D.streak.history)D.streak.history=[];
-      D.streak.history.push(today);
-      // Keep last 30 days max
-      if(D.streak.history.length>30)D.streak.history=D.streak.history.slice(-30);
-      saveD();
-      // Celebrate milestone
-      if(D.streak.count>1){
-        playFireStreak();
-        showToast('🔥 CHUỖI LỬA × '+D.streak.count,'Tuyệt vời! '+D.streak.count+' ngày liên tiếp!');
-      }
-    }
+// Người dùng tự xác nhận "hôm nay mình đã xong" — chỉ được bấm trong khung 23:00 – 24:00
+function checkInStreak(){
+  if(!D.streak)D.streak={count:0,best:0,lastDate:'',history:[]};
+  var today=todayKey();
+  if(D.streak.lastDate===today){renderStreakUI();return;}
+  if(!isStreakWindowOpen()){
+    showToast('🔒 Chưa tới giờ','Nút xác nhận chuỗi lửa chỉ mở từ 23:00 đến 24:00');
+    renderStreakUI();return;
   }
+  checkAndUpdateStreak();
+  D.streak.count=(D.streak.count||0)+1;
+  D.streak.lastDate=today;
+  if(D.streak.count>(D.streak.best||0))D.streak.best=D.streak.count;
+  // Add to history (keep last 30 days max)
+  if(!D.streak.history)D.streak.history=[];
+  D.streak.history.push(today);
+  if(D.streak.history.length>30)D.streak.history=D.streak.history.slice(-30);
+  saveD();
+  // Celebrate
+  playFireStreak();
+  if(D.streak.count>1){
+    showToast('🔥 CHUỖI LỬA × '+D.streak.count,'Tuyệt vời! '+D.streak.count+' ngày liên tiếp!');
+  } else {
+    showToast('🔥 BẮT ĐẦU CHUỖI LỬA','Ngày đầu tiên — giữ lửa mỗi tối nhé!');
+  }
+  renderStreakUI();
 }
 
 function playFireStreak(){
@@ -2674,15 +2701,34 @@ function renderStreakUI(){
   var k=todayKey();
   var tasks=D.tasks[k]||[];
   var tot=tasks.length,done=tasks.filter(function(t){return t.done;}).length;
+  var open=isStreakWindowOpen();
   if(todayDone){
     statusEl.className='streak-status streak-ok';
     statusEl.textContent='✅ Hôm nay hoàn thành!';
+  } else if(open){
+    statusEl.className='streak-status streak-pending';
+    statusEl.textContent='🔥 Đã mở — xác nhận trước 24:00!';
   } else if(tot>0){
     statusEl.className='streak-status streak-pending';
-    statusEl.textContent='⏳ Còn '+(tot-done)+' nhiệm vụ...';
+    statusEl.textContent='⏳ Còn '+(tot-done)+' nhiệm vụ · mở lúc 23:00';
   } else {
     statusEl.className='streak-status streak-pending';
-    statusEl.textContent='📋 Thêm nhiệm vụ để bắt đầu';
+    statusEl.textContent='⏳ Mở xác nhận lúc 23:00';
+  }
+
+  // Nút tự xác nhận
+  var btn=getEl('streakBtn'),hint=getEl('streakHint');
+  if(btn){
+    if(todayDone){
+      btn.disabled=true;btn.textContent='✅ Đã giữ lửa hôm nay';
+      if(hint)hint.textContent='Hẹn gặp lại 23:00 tối mai';
+    } else if(open){
+      btn.disabled=false;btn.textContent='🔥 Hôm nay mình đã xong!';
+      if(hint)hint.textContent='Nút đóng lúc 24:00 — quên là mất chuỗi';
+    } else {
+      btn.disabled=true;btn.textContent='🔒 Mở lúc 23:00';
+      if(hint)hint.textContent='Tự xác nhận hoàn thành ngày · chỉ mở 23:00 – 24:00';
+    }
   }
 
   // Render chain — last 10 days
@@ -4120,6 +4166,8 @@ initNotes();renderNotes();
 var c=getEl('wheelCanvas');if(c)drawWheel(0);
 updateTicketDisplay();
 renderStreakUI();
+// Cập nhật trạng thái nút chuỗi lửa mỗi 30s (mở lúc 23:00, đóng lúc 24:00 / sang ngày mới)
+setInterval(function(){checkAndUpdateStreak();renderStreakUI();},30000);
 timerRemaining=25*60;timerTotal=timerRemaining;
 if(getEl('timerDisplay'))getEl('timerDisplay').textContent=timerFmt(timerRemaining);
 </script>
