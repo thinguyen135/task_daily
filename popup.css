@@ -231,7 +231,7 @@ button {
 
 .form-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 112px;
+  grid-template-columns: minmax(0, 1fr) 126px;
   gap: 8px;
   margin-bottom: 10px;
   align-items: end;
@@ -243,7 +243,7 @@ button {
 
 .time-field,
 .priority-field {
-  max-width: 112px;
+  max-width: 126px;
 }
 
 .form-label {
@@ -1171,3 +1171,226 @@ select option {
   background: rgba(255, 93, 120, 0.15);
 }
 
+
+/* 24h time input */
+.t24 {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  min-height: 38px;
+  background: rgba(0, 0, 0, 0.34);
+  border: 1px solid rgba(0, 213, 255, 0.25);
+  border-radius: 8px;
+  padding: 5px 6px 5px 8px;
+  color: var(--text);
+  transition: all 0.2s ease;
+  cursor: text;
+}
+
+.t24:focus-within,
+.t24.open {
+  border-color: var(--neon1);
+  box-shadow: 0 0 0 3px rgba(0, 213, 255, 0.12), var(--glow1);
+  background: rgba(0, 213, 255, 0.05);
+}
+
+.t24 input.t24-seg {
+  width: 24px;
+  min-height: 24px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 2px 0;
+  margin: 0;
+  color: var(--text);
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  outline: none;
+  border-radius: 4px;
+}
+
+.t24 input.t24-seg::placeholder {
+  color: rgba(238, 244, 255, 0.35);
+  font-weight: 400;
+}
+
+.t24 input.t24-seg:focus {
+  background: rgba(0, 213, 255, 0.16);
+  border: none;
+  box-shadow: none;
+  color: var(--neon1);
+}
+
+.t24-sep {
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  user-select: none;
+  line-height: 1;
+}
+
+.t24-btn {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 2px 3px;
+  border-radius: 5px;
+  font-size: 12px;
+  line-height: 1;
+  transition: color 0.2s, background 0.2s;
+  flex-shrink: 0;
+}
+
+.t24-btn:hover,
+.t24.open .t24-btn {
+  color: var(--neon1);
+  background: rgba(0, 213, 255, 0.12);
+}
+
+.t24-pop {
+  position: fixed;
+  z-index: 9999;
+  width: 172px;
+  background: #101322;
+  border: 1px solid rgba(0, 213, 255, 0.45);
+  border-radius: 10px;
+  padding: 8px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.72), 0 0 16px rgba(0, 213, 255, 0.2);
+  display: none;
+  user-select: none;
+}
+
+.t24-pop.open {
+  display: block;
+}
+
+.t24-pop-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--muted);
+  padding-bottom: 6px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.t24-pop-now {
+  background: rgba(0, 213, 255, 0.12);
+  border: 1px solid rgba(0, 213, 255, 0.32);
+  color: var(--neon1);
+  border-radius: 5px;
+  padding: 2px 6px;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 9px;
+  cursor: pointer;
+}
+
+.t24-pop-now:hover {
+  background: rgba(0, 213, 255, 0.24);
+}
+
+.t24-pop-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.t24-pop-col-lbl {
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 9px;
+  color: var(--muted);
+  text-align: center;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.t24-pop-list {
+  position: relative;
+  height: 156px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-right: 2px;
+}
+
+.t24-pop-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.t24-pop-list::-webkit-scrollbar-thumb {
+  background: rgba(0, 213, 255, 0.3);
+  border-radius: 4px;
+}
+
+.t24-opt {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  color: var(--text);
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 0;
+  cursor: pointer;
+  text-align: center;
+}
+
+.t24-opt:hover {
+  background: rgba(0, 213, 255, 0.12);
+  color: var(--neon1);
+}
+
+.t24-opt.act {
+  background: linear-gradient(135deg, rgba(0, 213, 255, 0.28), rgba(255, 76, 207, 0.2));
+  border-color: rgba(0, 213, 255, 0.55);
+  color: var(--neon1);
+}
+
+.t24-pop-ftr {
+  display: flex;
+  gap: 6px;
+  margin-top: 7px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.t24-pop-act {
+  flex: 1;
+  padding: 5px 0;
+  border-radius: 6px;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.t24-pop-clr {
+  background: rgba(255, 93, 120, 0.1);
+  border: 1px solid rgba(255, 93, 120, 0.35);
+  color: var(--danger);
+}
+
+.t24-pop-clr:hover {
+  background: rgba(255, 93, 120, 0.22);
+}
+
+.t24-pop-ok {
+  background: rgba(0, 213, 255, 0.16);
+  border: 1px solid rgba(0, 213, 255, 0.42);
+  color: var(--neon1);
+}
+
+.t24-pop-ok:hover {
+  background: rgba(0, 213, 255, 0.28);
+}

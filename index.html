@@ -683,6 +683,56 @@ select option{background:#0c0c1e;}
 .note-color:hover{transform:scale(1.12);}
 .note-color.on{border-color:#fff;box-shadow:0 0 8px rgba(255,255,255,.4);}
 
+/* ═══ 24H TIME INPUT ═══ */
+.t24{display:flex;align-items:center;gap:2px;width:100%;min-height:39px;
+  background:rgba(0,0,0,.38);border:1px solid rgba(0,245,255,.2);
+  border-radius:10px;padding:6px 8px 6px 10px;color:var(--txt);
+  transition:border-color .2s,box-shadow .2s,background .2s;cursor:text;}
+.t24:focus-within,.t24.open{border-color:var(--c1);
+  box-shadow:0 0 0 3px rgba(0,245,255,.12);background:rgba(0,245,255,.04);}
+.t24 input.t24-seg{width:26px;background:transparent;border:none;box-shadow:none;
+  padding:4px 0;margin:0;color:var(--txt);font-family:'Space Mono',monospace;
+  font-size:14px;font-weight:700;text-align:center;outline:none;border-radius:5px;}
+.t24 input.t24-seg::placeholder{color:rgba(200,220,255,.32);font-weight:400;}
+.t24 input.t24-seg:focus{background:rgba(0,245,255,.16);box-shadow:none;border:none;color:var(--c1);}
+.t24-sep{font-family:'Space Mono',monospace;font-size:14px;font-weight:700;color:var(--mut);user-select:none;line-height:1;}
+.t24-btn{margin-left:auto;background:transparent;border:none;color:var(--mut);
+  cursor:pointer;padding:2px 4px;border-radius:6px;font-size:13px;line-height:1;
+  transition:color .2s,background .2s;flex-shrink:0;}
+.t24-btn:hover,.t24.open .t24-btn{color:var(--c1);background:rgba(0,245,255,.12);}
+
+.t24-pop{position:fixed;z-index:9999;width:176px;background:#0c0c1e;
+  border:1px solid rgba(0,245,255,.45);border-radius:12px;padding:8px;
+  box-shadow:0 12px 32px rgba(0,0,0,.7),0 0 18px rgba(0,245,255,.22);
+  display:none;user-select:none;}
+.t24-pop.open{display:block;animation:pin .16s ease;}
+.t24-pop-hdr{display:flex;align-items:center;justify-content:space-between;
+  font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--mut);
+  padding-bottom:6px;margin-bottom:6px;border-bottom:1px solid rgba(255,255,255,.08);}
+.t24-pop-now{background:rgba(0,245,255,.12);border:1px solid rgba(0,245,255,.32);
+  color:var(--c1);border-radius:6px;padding:2px 7px;font-family:'Space Mono',monospace;
+  font-size:9px;cursor:pointer;transition:background .15s;}
+.t24-pop-now:hover{background:rgba(0,245,255,.24);}
+.t24-pop-cols{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.t24-pop-col-lbl{font-family:'Space Mono',monospace;font-size:9px;color:var(--mut);
+  text-align:center;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;}
+.t24-pop-list{position:relative;height:168px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;padding-right:2px;}
+.t24-pop-list::-webkit-scrollbar{width:4px;}
+.t24-pop-list::-webkit-scrollbar-thumb{background:rgba(0,245,255,.3);border-radius:4px;}
+.t24-opt{background:transparent;border:1px solid transparent;border-radius:6px;
+  color:var(--txt);font-family:'Space Mono',monospace;font-size:12px;font-weight:700;
+  padding:4px 0;cursor:pointer;text-align:center;transition:all .12s;}
+.t24-opt:hover{background:rgba(0,245,255,.12);color:var(--c1);}
+.t24-opt.act{background:linear-gradient(135deg,rgba(0,245,255,.28),rgba(255,0,200,.2));
+  border-color:rgba(0,245,255,.55);color:var(--c1);box-shadow:0 0 8px rgba(0,245,255,.22);}
+.t24-pop-ftr{display:flex;gap:6px;margin-top:7px;padding-top:6px;border-top:1px solid rgba(255,255,255,.08);}
+.t24-pop-act{flex:1;padding:5px 0;border-radius:7px;font-family:'Space Mono',monospace;
+  font-size:10px;font-weight:700;cursor:pointer;transition:all .15s;}
+.t24-pop-clr{background:rgba(255,68,102,.1);border:1px solid rgba(255,68,102,.32);color:var(--red);}
+.t24-pop-clr:hover{background:rgba(255,68,102,.2);}
+.t24-pop-ok{background:rgba(0,245,255,.16);border:1px solid rgba(0,245,255,.42);color:var(--c1);}
+.t24-pop-ok:hover{background:rgba(0,245,255,.28);}
+
 </style>
 </head>
 <body>
@@ -1019,10 +1069,10 @@ select option{background:#0c0c1e;}
       <div class="fr">
         <div class="fg"><label class="fl">Tên mục tiêu *</label>
           <input type="text" id="tName" placeholder="Học tiếng Anh 30 phút..."/></div>
-        <div class="fg" style="max-width:130px"><label class="fl">Giờ bắt đầu *</label>
-          <input type="time" id="tStartTime" required/></div>
-        <div class="fg" style="max-width:130px"><label class="fl">Giờ kết thúc *</label>
-          <input type="time" id="tEndTime" required/></div>
+        <div class="fg" style="max-width:142px"><label class="fl" for="tStartTime_h">Giờ bắt đầu *</label>
+          <div class="t24" id="tStartTime" data-t24></div></div>
+        <div class="fg" style="max-width:142px"><label class="fl" for="tEndTime_h">Giờ kết thúc *</label>
+          <div class="t24" id="tEndTime" data-t24></div></div>
       </div>
       <div class="fr">
         <div class="fg"><label class="fl">Mô tả (tùy chọn)</label>
@@ -1780,13 +1830,487 @@ function switchTab(name,el){
 // ═══════════════════════════════════
 // ═══ TAB NGÀY ═══
 // ═══════════════════════════════════
+// ═══════════════════════════════════
+// ═══ 24H TIME INPUT & PICKER ═══
+// ═══════════════════════════════════
+var t24PickerEl=null;
+var t24ActiveCtx=null;
+
+function closeTime24Picker(){
+  if(!t24PickerEl)return;
+  t24PickerEl.classList.remove('open');
+  if(t24ActiveCtx){
+    t24ActiveCtx.wrap.classList.remove('open');
+    t24ActiveCtx.finalize();
+    t24ActiveCtx=null;
+  }
+}
+
+function positionTime24Picker(wrap){
+  if(!t24PickerEl)return;
+  var rect=wrap.getBoundingClientRect();
+  var popW=t24PickerEl.offsetWidth||176;
+  var popH=t24PickerEl.offsetHeight||256;
+  var left=Math.min(Math.max(8,rect.left),window.innerWidth-popW-8);
+  var spaceBelow=window.innerHeight-rect.bottom-8;
+  var top=(spaceBelow>=popH||spaceBelow>=rect.top)?(rect.bottom+6):Math.max(8,rect.top-popH-6);
+  t24PickerEl.style.left=left+'px';
+  t24PickerEl.style.top=top+'px';
+}
+
+function syncTime24PickerHighlight(shouldScroll){
+  if(!t24PickerEl||!t24ActiveCtx)return;
+  var vals={h:t24ActiveCtx.getHour(),m:t24ActiveCtx.getMin()};
+  ['h','m'].forEach(function(col){
+    var list=t24PickerEl.querySelector('.t24-pop-list[data-col="'+col+'"]');
+    if(!list)return;
+    var activeBtn=null;
+    list.querySelectorAll('.t24-opt').forEach(function(btn){
+      var isAct=(vals[col]!==''&&btn.dataset.val===vals[col]);
+      btn.classList.toggle('act',isAct);
+      if(isAct)activeBtn=btn;
+    });
+    if(shouldScroll){
+      list.scrollTop=activeBtn?Math.max(0,activeBtn.offsetTop-(list.clientHeight-activeBtn.offsetHeight)/2):0;
+    }
+  });
+}
+
+function ensureTime24Picker(){
+  if(t24PickerEl)return t24PickerEl;
+  var pop=document.createElement('div');
+  pop.className='t24-pop';
+  pop.id='t24Picker';
+  pop.setAttribute('role','dialog');
+  pop.setAttribute('aria-label','Chọn giờ 24h');
+
+  var hdr=document.createElement('div');
+  hdr.className='t24-pop-hdr';
+  var title=document.createElement('span');
+  title.textContent='🕒 GIỜ 24H';
+  var nowBtn=document.createElement('button');
+  nowBtn.type='button';
+  nowBtn.className='t24-pop-now';
+  nowBtn.textContent='Bây giờ';
+  hdr.appendChild(title);
+  hdr.appendChild(nowBtn);
+
+  var cols=document.createElement('div');
+  cols.className='t24-pop-cols';
+
+  function makeCol(labelText,maxVal,colType){
+    var col=document.createElement('div');
+    col.className='t24-pop-col';
+    var lbl=document.createElement('div');
+    lbl.className='t24-pop-col-lbl';
+    lbl.textContent=labelText;
+    var list=document.createElement('div');
+    list.className='t24-pop-list';
+    list.dataset.col=colType;
+    for(var i=0;i<=maxVal;i++){
+      var opt=document.createElement('button');
+      opt.type='button';
+      opt.className='t24-opt';
+      opt.dataset.val=pad(i);
+      opt.textContent=pad(i);
+      list.appendChild(opt);
+    }
+    col.appendChild(lbl);
+    col.appendChild(list);
+    return col;
+  }
+
+  cols.appendChild(makeCol('Giờ',23,'h'));
+  cols.appendChild(makeCol('Phút',59,'m'));
+
+  var ftr=document.createElement('div');
+  ftr.className='t24-pop-ftr';
+  var clrBtn=document.createElement('button');
+  clrBtn.type='button';
+  clrBtn.className='t24-pop-act t24-pop-clr';
+  clrBtn.textContent='Xóa';
+  var okBtn=document.createElement('button');
+  okBtn.type='button';
+  okBtn.className='t24-pop-act t24-pop-ok';
+  okBtn.textContent='✓ Xong';
+  ftr.appendChild(clrBtn);
+  ftr.appendChild(okBtn);
+
+  pop.appendChild(hdr);
+  pop.appendChild(cols);
+  pop.appendChild(ftr);
+  document.body.appendChild(pop);
+
+  pop.addEventListener('click',function(e){
+    if(!t24ActiveCtx)return;
+    var opt=e.target.closest('.t24-opt');
+    if(!opt)return;
+    var list=opt.closest('.t24-pop-list');
+    if(list&&list.dataset.col==='h')t24ActiveCtx.setHour(opt.dataset.val);
+    else if(list&&list.dataset.col==='m')t24ActiveCtx.setMin(opt.dataset.val);
+    syncTime24PickerHighlight(false);
+  });
+
+  nowBtn.addEventListener('click',function(){
+    if(!t24ActiveCtx)return;
+    var n=new Date();
+    t24ActiveCtx.setHour(pad(n.getHours()));
+    t24ActiveCtx.setMin(pad(n.getMinutes()));
+    syncTime24PickerHighlight(true);
+  });
+
+  clrBtn.addEventListener('click',function(){
+    if(!t24ActiveCtx)return;
+    t24ActiveCtx.clear();
+    closeTime24Picker();
+  });
+
+  okBtn.addEventListener('click',function(){closeTime24Picker();});
+
+  document.addEventListener('mousedown',function(e){
+    if(!t24PickerEl||!t24PickerEl.classList.contains('open'))return;
+    if(t24PickerEl.contains(e.target))return;
+    if(t24ActiveCtx&&t24ActiveCtx.wrap.contains(e.target))return;
+    closeTime24Picker();
+  });
+
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape'&&t24PickerEl&&t24PickerEl.classList.contains('open'))closeTime24Picker();
+  });
+
+  window.addEventListener('resize',function(){
+    if(t24PickerEl&&t24PickerEl.classList.contains('open')&&t24ActiveCtx)positionTime24Picker(t24ActiveCtx.wrap);
+  });
+
+  window.addEventListener('scroll',function(e){
+    if(!t24PickerEl||!t24PickerEl.classList.contains('open'))return;
+    if(t24PickerEl.contains(e.target))return;
+    if(t24ActiveCtx)positionTime24Picker(t24ActiveCtx.wrap);
+  },true);
+
+  t24PickerEl=pop;
+  return pop;
+}
+
+function initTime24Inputs(){
+  document.querySelectorAll('[data-t24]').forEach(function(wrap){
+    if(wrap.dataset.t24Ready==='1')return;
+    wrap.dataset.t24Ready='1';
+
+    var hEl=document.createElement('input');
+    hEl.type='text';
+    hEl.className='t24-seg t24-h';
+    hEl.id=wrap.id+'_h';
+    hEl.setAttribute('inputmode','numeric');
+    hEl.setAttribute('maxlength','2');
+    hEl.setAttribute('placeholder','--');
+    hEl.setAttribute('autocomplete','off');
+    hEl.setAttribute('aria-label','Giờ (00 đến 23)');
+
+    var sep=document.createElement('span');
+    sep.className='t24-sep';
+    sep.textContent=':';
+
+    var mEl=document.createElement('input');
+    mEl.type='text';
+    mEl.className='t24-seg t24-m';
+    mEl.id=wrap.id+'_m';
+    mEl.setAttribute('inputmode','numeric');
+    mEl.setAttribute('maxlength','2');
+    mEl.setAttribute('placeholder','--');
+    mEl.setAttribute('autocomplete','off');
+    mEl.setAttribute('aria-label','Phút (00 đến 59)');
+
+    var btn=document.createElement('button');
+    btn.type='button';
+    btn.className='t24-btn';
+    btn.tabIndex=-1;
+    btn.title='Chọn giờ (24h)';
+    btn.setAttribute('aria-label','Mở bảng chọn giờ 24h');
+    btn.textContent='🕒';
+
+    wrap.appendChild(hEl);
+    wrap.appendChild(sep);
+    wrap.appendChild(mEl);
+    wrap.appendChild(btn);
+
+    var hFresh=false,mFresh=false,hJustFocused=false,mJustFocused=false,hSkipFocusSelect=false;
+
+    function padSeg(el){
+      if(/^\d$/.test(el.value))el.value='0'+el.value;
+    }
+
+    function focusMinute(){
+      mEl.focus();
+      mFresh=true;
+      if(mEl.value)mEl.select();
+    }
+
+    function enterMinuteDigit(digit){
+      var allSel=(mEl.selectionStart===0&&mEl.selectionEnd===mEl.value.length&&mEl.value.length>0);
+      var cur=(mFresh||allSel)?'':mEl.value.replace(/\D/g,'');
+      mFresh=false;
+      if(cur.length===0){
+        if(parseInt(digit,10)>=6){
+          mEl.value='0'+digit;
+          mFresh=true;
+        }else{
+          mEl.value=digit;
+        }
+      }else{
+        mEl.value=cur.slice(0,1)+digit;
+        mFresh=true;
+      }
+      if(t24ActiveCtx&&t24ActiveCtx.wrap===wrap)syncTime24PickerHighlight(true);
+    }
+
+    function enterHourDigit(digit){
+      var allSel=(hEl.selectionStart===0&&hEl.selectionEnd===hEl.value.length&&hEl.value.length>0);
+      var cur=(hFresh||allSel)?'':hEl.value.replace(/\D/g,'');
+      hFresh=false;
+      if(cur.length===0){
+        if(parseInt(digit,10)>=3){
+          hEl.value='0'+digit;
+          focusMinute();
+        }else{
+          hEl.value=digit;
+        }
+      }else{
+        var num=parseInt(cur.slice(0,1)+digit,10);
+        if(num<=23){
+          hEl.value=cur.slice(0,1)+digit;
+          focusMinute();
+        }else{
+          hEl.value='0'+cur.slice(0,1);
+          focusMinute();
+          enterMinuteDigit(digit);
+        }
+      }
+      if(t24ActiveCtx&&t24ActiveCtx.wrap===wrap)syncTime24PickerHighlight(true);
+    }
+
+    function stepSeg(el,maxVal,delta){
+      var cur=el.value.trim();
+      var num=cur===''?(delta>0?-1:0):parseInt(cur,10);
+      if(isNaN(num))num=delta>0?-1:0;
+      var mod=maxVal+1;
+      var next=((num+delta)%mod+mod)%mod;
+      el.value=pad(next);
+      el.select();
+      if(el===hEl)hFresh=true;
+      else mFresh=true;
+      if(t24ActiveCtx&&t24ActiveCtx.wrap===wrap)syncTime24PickerHighlight(true);
+    }
+
+    function handlePaste(e){
+      var txt=(e.clipboardData||window.clipboardData).getData('text')||'';
+      txt=txt.trim();
+      var m=txt.match(/(\d{1,2})\s*[:hH.]\s*(\d{1,2})/);
+      if(!m){
+        var digits=txt.replace(/\D/g,'');
+        if(digits.length===4)m=[txt,digits.slice(0,2),digits.slice(2,4)];
+        else if(digits.length===3)m=[txt,digits.slice(0,1),digits.slice(1,3)];
+      }
+      if(m){
+        var hh=parseInt(m[1],10),mm=parseInt(m[2],10);
+        if(!isNaN(hh)&&!isNaN(mm)&&hh>=0&&hh<=23&&mm>=0&&mm<=59){
+          e.preventDefault();
+          hEl.value=pad(hh);
+          mEl.value=pad(mm);
+          hFresh=true;
+          mFresh=true;
+          if(t24ActiveCtx&&t24ActiveCtx.wrap===wrap)syncTime24PickerHighlight(true);
+        }
+      }
+    }
+
+    hEl.addEventListener('mousedown',function(){if(document.activeElement!==hEl)hJustFocused=true;});
+    hEl.addEventListener('focus',function(){if(hSkipFocusSelect){hSkipFocusSelect=false;hFresh=false;return;}hFresh=true;if(hEl.value){hEl.select();setTimeout(function(){if(hFresh&&document.activeElement===hEl&&hEl.value)hEl.select();},0);}});
+    hEl.addEventListener('mouseup',function(e){
+      if(hJustFocused){hJustFocused=false;if(hEl.value){e.preventDefault();hEl.select();}}
+    });
+    hEl.addEventListener('blur',function(){padSeg(hEl);});
+    hEl.addEventListener('paste',handlePaste);
+    hEl.addEventListener('keydown',function(e){
+      if(e.ctrlKey||e.metaKey||e.altKey)return;
+      if(e.key>='0'&&e.key<='9'){e.preventDefault();enterHourDigit(e.key);return;}
+      if(e.key===':'||e.key==='.'||e.key==='h'||e.key==='H'){e.preventDefault();padSeg(hEl);focusMinute();return;}
+      if(e.key==='ArrowUp'){e.preventDefault();stepSeg(hEl,23,1);return;}
+      if(e.key==='ArrowDown'){e.preventDefault();stepSeg(hEl,23,-1);return;}
+      if(e.key==='ArrowRight'){
+        if(hEl.selectionStart===hEl.value.length||(hEl.selectionStart===0&&hEl.selectionEnd===hEl.value.length)){
+          e.preventDefault();padSeg(hEl);focusMinute();
+        }
+        return;
+      }
+      if(e.key==='Backspace'){
+        e.preventDefault();
+        if(hEl.selectionStart===0&&hEl.selectionEnd===hEl.value.length)hEl.value='';
+        else hEl.value=hEl.value.slice(0,-1);
+        hFresh=false;
+        if(t24ActiveCtx&&t24ActiveCtx.wrap===wrap)syncTime24PickerHighlight(false);
+        return;
+      }
+      if(e.key==='Delete'){e.preventDefault();hEl.value='';hFresh=false;return;}
+      if(e.key==='Enter'){
+        padSeg(hEl);
+        if(hEl.value!==''&&mEl.value==='')mEl.value='00';
+        closeTime24Picker();
+        return;
+      }
+      if(e.key.length===1)e.preventDefault();
+    });
+    hEl.addEventListener('input',function(){
+      var d=hEl.value.replace(/\D/g,'').slice(0,2);
+      if(d.length===1&&parseInt(d,10)>=3){hEl.value='0'+d;focusMinute();}
+      else if(d.length===2){
+        if(parseInt(d,10)<=23){hEl.value=d;focusMinute();}
+        else{hEl.value='0'+d[0];focusMinute();enterMinuteDigit(d[1]);}
+      }else hEl.value=d;
+      hFresh=false;
+    });
+
+    mEl.addEventListener('mousedown',function(){if(document.activeElement!==mEl)mJustFocused=true;});
+    mEl.addEventListener('focus',function(){mFresh=true;if(mEl.value){mEl.select();setTimeout(function(){if(mFresh&&document.activeElement===mEl&&mEl.value)mEl.select();},0);}});
+    mEl.addEventListener('mouseup',function(e){
+      if(mJustFocused){mJustFocused=false;if(mEl.value){e.preventDefault();mEl.select();}}
+    });
+    mEl.addEventListener('blur',function(){padSeg(mEl);});
+    mEl.addEventListener('paste',handlePaste);
+    mEl.addEventListener('keydown',function(e){
+      if(e.ctrlKey||e.metaKey||e.altKey)return;
+      if(e.key>='0'&&e.key<='9'){e.preventDefault();enterMinuteDigit(e.key);return;}
+      if(e.key==='ArrowUp'){e.preventDefault();stepSeg(mEl,59,1);return;}
+      if(e.key==='ArrowDown'){e.preventDefault();stepSeg(mEl,59,-1);return;}
+      if(e.key==='ArrowLeft'){
+        if(mEl.selectionStart===0||(mEl.selectionStart===0&&mEl.selectionEnd===mEl.value.length)){
+          e.preventDefault();padSeg(mEl);hEl.focus();hFresh=true;if(hEl.value)hEl.select();
+        }
+        return;
+      }
+      if(e.key==='Backspace'){
+        e.preventDefault();
+        if(mEl.value===''){
+          hSkipFocusSelect=true;hEl.focus();hFresh=false;
+          hEl.setSelectionRange(hEl.value.length,hEl.value.length);
+        }else if(mEl.selectionStart===0&&mEl.selectionEnd===mEl.value.length){
+          mEl.value='';mFresh=false;
+        }else{
+          mEl.value=mEl.value.slice(0,-1);mFresh=false;
+        }
+        if(t24ActiveCtx&&t24ActiveCtx.wrap===wrap)syncTime24PickerHighlight(false);
+        return;
+      }
+      if(e.key==='Delete'){e.preventDefault();mEl.value='';mFresh=false;return;}
+      if(e.key==='Enter'){padSeg(mEl);closeTime24Picker();return;}
+      if(e.key.length===1)e.preventDefault();
+    });
+    mEl.addEventListener('input',function(){
+      var d=mEl.value.replace(/\D/g,'').slice(0,2);
+      if(d.length===1&&parseInt(d,10)>=6){mEl.value='0'+d;mFresh=true;}
+      else if(d.length===2){mEl.value=parseInt(d,10)<=59?d:('0'+d[0]);mFresh=true;}
+      else{mEl.value=d;mFresh=false;}
+    });
+
+    function finalize(){
+      padSeg(hEl);
+      padSeg(mEl);
+      if(hEl.value!==''&&mEl.value==='')mEl.value='00';
+    }
+
+    wrap.addEventListener('focusout',function(e){
+      if(wrap.contains(e.relatedTarget))return;
+      if(t24PickerEl&&t24PickerEl.contains(e.relatedTarget))return;
+      if(t24ActiveCtx&&t24ActiveCtx.wrap===wrap)return;
+      finalize();
+    });
+
+    wrap.addEventListener('click',function(e){
+      if(e.target===wrap||e.target===sep){
+        hEl.focus();
+        if(hEl.value)hEl.select();
+      }
+    });
+
+    var ctx={
+      wrap:wrap,
+      finalize:finalize,
+      getHour:function(){
+        var v=hEl.value.trim();
+        return /^\d{1,2}$/.test(v)?pad(parseInt(v,10)):'';
+      },
+      getMin:function(){
+        var v=mEl.value.trim();
+        return /^\d{1,2}$/.test(v)?pad(parseInt(v,10)):'';
+      },
+      setHour:function(hh){
+        hEl.value=hh;
+        if(mEl.value==='')mEl.value='00';
+      },
+      setMin:function(mm){
+        mEl.value=mm;
+        if(hEl.value==='')hEl.value='00';
+      },
+      clear:function(){
+        hEl.value='';
+        mEl.value='';
+      }
+    };
+
+    btn.addEventListener('click',function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      var pop=ensureTime24Picker();
+      if(t24ActiveCtx&&t24ActiveCtx.wrap===wrap&&pop.classList.contains('open')){
+        closeTime24Picker();
+        return;
+      }
+      if(t24ActiveCtx)closeTime24Picker();
+      t24ActiveCtx=ctx;
+      wrap.classList.add('open');
+      pop.classList.add('open');
+      positionTime24Picker(wrap);
+      syncTime24PickerHighlight(true);
+    });
+
+    Object.defineProperty(wrap,'value',{
+      configurable:true,
+      get:function(){
+        var hr=hEl.value.trim();
+        var mn=mEl.value.trim();
+        if(!hr)return '';
+        var hh=parseInt(hr,10);
+        if(isNaN(hh)||hh<0||hh>23)return '';
+        var mm=mn===''?0:parseInt(mn,10);
+        if(isNaN(mm)||mm<0||mm>59)return '';
+        return pad(hh)+':'+pad(mm);
+      },
+      set:function(v){
+        var str=(v===null||v===undefined)?'':String(v).trim();
+        if(!str){hEl.value='';mEl.value='';return;}
+        var match=str.match(/^(\d{1,2}):(\d{1,2})$/);
+        if(match){
+          var hh=parseInt(match[1],10),mm=parseInt(match[2],10);
+          if(hh>=0&&hh<=23&&mm>=0&&mm<=59){
+            hEl.value=pad(hh);
+            mEl.value=pad(mm);
+            return;
+          }
+        }
+        hEl.value='';
+        mEl.value='';
+      }
+    });
+  });
+}
+
 function addTask(){
   var name=getVal('tName').trim();
   if(!name){flashEl('tName');showToast('Thiếu tên mục tiêu','Vui lòng nhập tên công việc / mục tiêu!');return;}
   var startTm=getVal('tStartTime');
-  if(!startTm){flashEl('tStartTime');showToast('Thiếu giờ bắt đầu','Vui lòng nhập giờ bắt đầu công việc!');return;}
+  if(!startTm){flashEl('tStartTime');showToast('Thiếu giờ bắt đầu','Vui lòng nhập giờ bắt đầu công việc (24h: 00:00 – 23:59)!');return;}
   var endTm=getVal('tEndTime');
-  if(!endTm){flashEl('tEndTime');showToast('Thiếu giờ kết thúc','Vui lòng nhập giờ kết thúc công việc!');return;}
+  if(!endTm){flashEl('tEndTime');showToast('Thiếu giờ kết thúc','Vui lòng nhập giờ kết thúc công việc (24h: 00:00 – 23:59)!');return;}
   var dc=getVal('tDesc').trim(),pr=getVal('tPr');
   var k=todayKey();
   if(!D.tasks[k])D.tasks[k]=[];
@@ -4158,6 +4682,7 @@ if(!D.tickets)D.tickets=0;
 if(!D.spinHistory)D.spinHistory=[];
 if(!D.prizes||!D.prizes.length)D.prizes=JSON.parse(JSON.stringify(DEFAULT_PRIZES));
 initPrinciples();
+initTime24Inputs();
 renderPrinciples();
 renderTasks();
 initCal();

@@ -286,16 +286,529 @@
     }, 900);
   }
 
+  let t24PickerEl = null;
+  let t24ActiveCtx = null;
+
+  function closeTime24Picker() {
+    if (!t24PickerEl) return;
+    t24PickerEl.classList.remove("open");
+    if (t24ActiveCtx) {
+      t24ActiveCtx.wrap.classList.remove("open");
+      t24ActiveCtx.finalize();
+      t24ActiveCtx = null;
+    }
+  }
+
+  function positionTime24Picker(wrap) {
+    if (!t24PickerEl) return;
+    const rect = wrap.getBoundingClientRect();
+    const popW = t24PickerEl.offsetWidth || 172;
+    const popH = t24PickerEl.offsetHeight || 242;
+    const left = Math.min(Math.max(8, rect.left), window.innerWidth - popW - 8);
+    const spaceBelow = window.innerHeight - rect.bottom - 8;
+    const top = (spaceBelow >= popH || spaceBelow >= rect.top)
+      ? (rect.bottom + 6)
+      : Math.max(8, rect.top - popH - 6);
+    t24PickerEl.style.left = `${left}px`;
+    t24PickerEl.style.top = `${top}px`;
+  }
+
+  function syncTime24PickerHighlight(shouldScroll) {
+    if (!t24PickerEl || !t24ActiveCtx) return;
+    const vals = { h: t24ActiveCtx.getHour(), m: t24ActiveCtx.getMin() };
+    ["h", "m"].forEach((col) => {
+      const list = t24PickerEl.querySelector(`.t24-pop-list[data-col="${col}"]`);
+      if (!list) return;
+      let activeBtn = null;
+      list.querySelectorAll(".t24-opt").forEach((btn) => {
+        const isAct = vals[col] !== "" && btn.dataset.val === vals[col];
+        btn.classList.toggle("act", isAct);
+        if (isAct) activeBtn = btn;
+      });
+      if (shouldScroll) {
+        list.scrollTop = activeBtn ? Math.max(0, activeBtn.offsetTop - (list.clientHeight - activeBtn.offsetHeight) / 2) : 0;
+      }
+    });
+  }
+
+  function ensureTime24Picker() {
+    if (t24PickerEl) return t24PickerEl;
+    const pop = document.createElement("div");
+    pop.className = "t24-pop";
+    pop.id = "t24Picker";
+    pop.setAttribute("role", "dialog");
+    pop.setAttribute("aria-label", "Chọn giờ 24h");
+
+    const hdr = document.createElement("div");
+    hdr.className = "t24-pop-hdr";
+    const title = document.createElement("span");
+    title.textContent = "🕒 GIỜ 24H";
+    const nowBtn = document.createElement("button");
+    nowBtn.type = "button";
+    nowBtn.className = "t24-pop-now";
+    nowBtn.textContent = "Bây giờ";
+    hdr.appendChild(title);
+    hdr.appendChild(nowBtn);
+
+    const cols = document.createElement("div");
+    cols.className = "t24-pop-cols";
+
+    function makeCol(labelText, maxVal, colType) {
+      const col = document.createElement("div");
+      col.className = "t24-pop-col";
+      const lbl = document.createElement("div");
+      lbl.className = "t24-pop-col-lbl";
+      lbl.textContent = labelText;
+      const list = document.createElement("div");
+      list.className = "t24-pop-list";
+      list.dataset.col = colType;
+      for (let i = 0; i <= maxVal; i += 1) {
+        const opt = document.createElement("button");
+        opt.type = "button";
+        opt.className = "t24-opt";
+        opt.dataset.val = pad(i);
+        opt.textContent = pad(i);
+        list.appendChild(opt);
+      }
+      col.appendChild(lbl);
+      col.appendChild(list);
+      return col;
+    }
+
+    cols.appendChild(makeCol("Giờ", 23, "h"));
+    cols.appendChild(makeCol("Phút", 59, "m"));
+
+    const ftr = document.createElement("div");
+    ftr.className = "t24-pop-ftr";
+    const clrBtn = document.createElement("button");
+    clrBtn.type = "button";
+    clrBtn.className = "t24-pop-act t24-pop-clr";
+    clrBtn.textContent = "Xóa";
+    const okBtn = document.createElement("button");
+    okBtn.type = "button";
+    okBtn.className = "t24-pop-act t24-pop-ok";
+    okBtn.textContent = "✓ Xong";
+    ftr.appendChild(clrBtn);
+    ftr.appendChild(okBtn);
+
+    pop.appendChild(hdr);
+    pop.appendChild(cols);
+    pop.appendChild(ftr);
+    document.body.appendChild(pop);
+
+    pop.addEventListener("click", (e) => {
+      if (!t24ActiveCtx) return;
+      const opt = e.target.closest(".t24-opt");
+      if (!opt) return;
+      const list = opt.closest(".t24-pop-list");
+      if (list && list.dataset.col === "h") t24ActiveCtx.setHour(opt.dataset.val);
+      else if (list && list.dataset.col === "m") t24ActiveCtx.setMin(opt.dataset.val);
+      syncTime24PickerHighlight(false);
+    });
+
+    nowBtn.addEventListener("click", () => {
+      if (!t24ActiveCtx) return;
+      const n = new Date();
+      t24ActiveCtx.setHour(pad(n.getHours()));
+      t24ActiveCtx.setMin(pad(n.getMinutes()));
+      syncTime24PickerHighlight(true);
+    });
+
+    clrBtn.addEventListener("click", () => {
+      if (!t24ActiveCtx) return;
+      t24ActiveCtx.clear();
+      closeTime24Picker();
+    });
+
+    okBtn.addEventListener("click", () => closeTime24Picker());
+
+    document.addEventListener("mousedown", (e) => {
+      if (!t24PickerEl || !t24PickerEl.classList.contains("open")) return;
+      if (t24PickerEl.contains(e.target)) return;
+      if (t24ActiveCtx && t24ActiveCtx.wrap.contains(e.target)) return;
+      closeTime24Picker();
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && t24PickerEl && t24PickerEl.classList.contains("open")) {
+        closeTime24Picker();
+      }
+    });
+
+    window.addEventListener("resize", () => {
+      if (t24PickerEl && t24PickerEl.classList.contains("open") && t24ActiveCtx) {
+        positionTime24Picker(t24ActiveCtx.wrap);
+      }
+    });
+
+    t24PickerEl = pop;
+    return pop;
+  }
+
+  function initTime24Inputs() {
+    document.querySelectorAll("[data-t24]").forEach((wrap) => {
+      if (wrap.dataset.t24Ready === "1") return;
+      wrap.dataset.t24Ready = "1";
+
+      const hEl = document.createElement("input");
+      hEl.type = "text";
+      hEl.className = "t24-seg t24-h";
+      hEl.id = `${wrap.id}_h`;
+      hEl.setAttribute("inputmode", "numeric");
+      hEl.setAttribute("maxlength", "2");
+      hEl.setAttribute("placeholder", "--");
+      hEl.setAttribute("autocomplete", "off");
+      hEl.setAttribute("aria-label", "Giờ (00 đến 23)");
+
+      const sep = document.createElement("span");
+      sep.className = "t24-sep";
+      sep.textContent = ":";
+
+      const mEl = document.createElement("input");
+      mEl.type = "text";
+      mEl.className = "t24-seg t24-m";
+      mEl.id = `${wrap.id}_m`;
+      mEl.setAttribute("inputmode", "numeric");
+      mEl.setAttribute("maxlength", "2");
+      mEl.setAttribute("placeholder", "--");
+      mEl.setAttribute("autocomplete", "off");
+      mEl.setAttribute("aria-label", "Phút (00 đến 59)");
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "t24-btn";
+      btn.tabIndex = -1;
+      btn.title = "Chọn giờ (24h)";
+      btn.setAttribute("aria-label", "Mở bảng chọn giờ 24h");
+      btn.textContent = "🕒";
+
+      wrap.appendChild(hEl);
+      wrap.appendChild(sep);
+      wrap.appendChild(mEl);
+      wrap.appendChild(btn);
+
+      let hFresh = false;
+      let mFresh = false;
+      let hJustFocused = false;
+      let mJustFocused = false;
+      let hSkipFocusSelect = false;
+
+      const padSeg = (el) => {
+        if (/^\d$/.test(el.value)) el.value = `0${el.value}`;
+      };
+
+      const focusMinute = () => {
+        mEl.focus();
+        mFresh = true;
+        if (mEl.value) mEl.select();
+      };
+
+      const enterMinuteDigit = (digit) => {
+        const allSel = mEl.selectionStart === 0 && mEl.selectionEnd === mEl.value.length && mEl.value.length > 0;
+        const cur = (mFresh || allSel) ? "" : mEl.value.replace(/\D/g, "");
+        mFresh = false;
+        if (cur.length === 0) {
+          if (parseInt(digit, 10) >= 6) {
+            mEl.value = `0${digit}`;
+            mFresh = true;
+          } else {
+            mEl.value = digit;
+          }
+        } else {
+          mEl.value = `${cur.slice(0, 1)}${digit}`;
+          mFresh = true;
+        }
+        if (t24ActiveCtx && t24ActiveCtx.wrap === wrap) syncTime24PickerHighlight(true);
+      };
+
+      const enterHourDigit = (digit) => {
+        const allSel = hEl.selectionStart === 0 && hEl.selectionEnd === hEl.value.length && hEl.value.length > 0;
+        const cur = (hFresh || allSel) ? "" : hEl.value.replace(/\D/g, "");
+        hFresh = false;
+        if (cur.length === 0) {
+          if (parseInt(digit, 10) >= 3) {
+            hEl.value = `0${digit}`;
+            focusMinute();
+          } else {
+            hEl.value = digit;
+          }
+        } else {
+          const num = parseInt(`${cur.slice(0, 1)}${digit}`, 10);
+          if (num <= 23) {
+            hEl.value = `${cur.slice(0, 1)}${digit}`;
+            focusMinute();
+          } else {
+            hEl.value = `0${cur.slice(0, 1)}`;
+            focusMinute();
+            enterMinuteDigit(digit);
+          }
+        }
+        if (t24ActiveCtx && t24ActiveCtx.wrap === wrap) syncTime24PickerHighlight(true);
+      };
+
+      const stepSeg = (el, maxVal, delta) => {
+        const cur = el.value.trim();
+        let num = cur === "" ? (delta > 0 ? -1 : 0) : parseInt(cur, 10);
+        if (Number.isNaN(num)) num = delta > 0 ? -1 : 0;
+        const mod = maxVal + 1;
+        const next = (((num + delta) % mod) + mod) % mod;
+        el.value = pad(next);
+        el.select();
+        if (el === hEl) hFresh = true;
+        else mFresh = true;
+        if (t24ActiveCtx && t24ActiveCtx.wrap === wrap) syncTime24PickerHighlight(true);
+      };
+
+      const handlePaste = (e) => {
+        const txt = ((e.clipboardData || window.clipboardData).getData("text") || "").trim();
+        let m = txt.match(/(\d{1,2})\s*[:hH.]\s*(\d{1,2})/);
+        if (!m) {
+          const digits = txt.replace(/\D/g, "");
+          if (digits.length === 4) m = [txt, digits.slice(0, 2), digits.slice(2, 4)];
+          else if (digits.length === 3) m = [txt, digits.slice(0, 1), digits.slice(1, 3)];
+        }
+        if (m) {
+          const hh = parseInt(m[1], 10);
+          const mm = parseInt(m[2], 10);
+          if (!Number.isNaN(hh) && !Number.isNaN(mm) && hh >= 0 && hh <= 23 && mm >= 0 && mm <= 59) {
+            e.preventDefault();
+            hEl.value = pad(hh);
+            mEl.value = pad(mm);
+            hFresh = true;
+            mFresh = true;
+            if (t24ActiveCtx && t24ActiveCtx.wrap === wrap) syncTime24PickerHighlight(true);
+          }
+        }
+      };
+
+      hEl.addEventListener("mousedown", () => { if (document.activeElement !== hEl) hJustFocused = true; });
+      hEl.addEventListener("focus", () => {
+        if (hSkipFocusSelect) { hSkipFocusSelect = false; hFresh = false; return; }
+        hFresh = true;
+        hEl.select();
+        setTimeout(() => { if (hFresh && document.activeElement === hEl && hEl.value) hEl.select(); }, 0);
+      });
+      hEl.addEventListener("mouseup", (e) => {
+        if (hJustFocused) {
+          hJustFocused = false;
+          if (hEl.value) { e.preventDefault(); hEl.select(); }
+        }
+      });
+      hEl.addEventListener("blur", () => padSeg(hEl));
+      hEl.addEventListener("paste", handlePaste);
+      hEl.addEventListener("keydown", (e) => {
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+        if (e.key >= "0" && e.key <= "9") { e.preventDefault(); enterHourDigit(e.key); return; }
+        if (e.key === ":" || e.key === "." || e.key === "h" || e.key === "H") { e.preventDefault(); padSeg(hEl); focusMinute(); return; }
+        if (e.key === "ArrowUp") { e.preventDefault(); stepSeg(hEl, 23, 1); return; }
+        if (e.key === "ArrowDown") { e.preventDefault(); stepSeg(hEl, 23, -1); return; }
+        if (e.key === "ArrowRight") {
+          if (hEl.selectionStart === hEl.value.length || (hEl.selectionStart === 0 && hEl.selectionEnd === hEl.value.length)) {
+            e.preventDefault();
+            padSeg(hEl);
+            focusMinute();
+          }
+          return;
+        }
+        if (e.key === "Backspace") {
+          e.preventDefault();
+          if (hEl.selectionStart === 0 && hEl.selectionEnd === hEl.value.length) hEl.value = "";
+          else hEl.value = hEl.value.slice(0, -1);
+          hFresh = false;
+          if (t24ActiveCtx && t24ActiveCtx.wrap === wrap) syncTime24PickerHighlight(false);
+          return;
+        }
+        if (e.key === "Delete") { e.preventDefault(); hEl.value = ""; hFresh = false; return; }
+        if (e.key === "Enter") {
+          padSeg(hEl);
+          if (hEl.value !== "" && mEl.value === "") mEl.value = "00";
+          if (t24PickerEl && t24PickerEl.classList.contains("open")) {
+            e.stopPropagation();
+            closeTime24Picker();
+          }
+          return;
+        }
+        if (e.key.length === 1) e.preventDefault();
+      });
+      hEl.addEventListener("input", () => {
+        const d = hEl.value.replace(/\D/g, "").slice(0, 2);
+        if (d.length === 1 && parseInt(d, 10) >= 3) { hEl.value = `0${d}`; focusMinute(); }
+        else if (d.length === 2) {
+          if (parseInt(d, 10) <= 23) { hEl.value = d; focusMinute(); }
+          else { hEl.value = `0${d[0]}`; focusMinute(); enterMinuteDigit(d[1]); }
+        } else hEl.value = d;
+        hFresh = false;
+      });
+
+      mEl.addEventListener("mousedown", () => { if (document.activeElement !== mEl) mJustFocused = true; });
+      mEl.addEventListener("focus", () => {
+        mFresh = true;
+        if (mEl.value) {
+          mEl.select();
+          setTimeout(() => { if (mFresh && document.activeElement === mEl && mEl.value) mEl.select(); }, 0);
+        }
+      });
+      mEl.addEventListener("mouseup", (e) => {
+        if (mJustFocused) {
+          mJustFocused = false;
+          if (mEl.value) { e.preventDefault(); mEl.select(); }
+        }
+      });
+      mEl.addEventListener("blur", () => padSeg(mEl));
+      mEl.addEventListener("paste", handlePaste);
+      mEl.addEventListener("keydown", (e) => {
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+        if (e.key >= "0" && e.key <= "9") { e.preventDefault(); enterMinuteDigit(e.key); return; }
+        if (e.key === "ArrowUp") { e.preventDefault(); stepSeg(mEl, 59, 1); return; }
+        if (e.key === "ArrowDown") { e.preventDefault(); stepSeg(mEl, 59, -1); return; }
+        if (e.key === "ArrowLeft") {
+          if (mEl.selectionStart === 0 || (mEl.selectionStart === 0 && mEl.selectionEnd === mEl.value.length)) {
+            e.preventDefault();
+            padSeg(mEl);
+            hEl.focus();
+            hFresh = true;
+            hEl.select();
+        setTimeout(() => { if (hFresh && document.activeElement === hEl && hEl.value) hEl.select(); }, 0);
+          }
+          return;
+        }
+        if (e.key === "Backspace") {
+          e.preventDefault();
+          if (mEl.value === "") {
+            hSkipFocusSelect = true;
+            hEl.focus();
+            hFresh = false;
+            hEl.setSelectionRange(hEl.value.length, hEl.value.length);
+          } else if (mEl.selectionStart === 0 && mEl.selectionEnd === mEl.value.length) {
+            mEl.value = "";
+            mFresh = false;
+          } else {
+            mEl.value = mEl.value.slice(0, -1);
+            mFresh = false;
+          }
+          if (t24ActiveCtx && t24ActiveCtx.wrap === wrap) syncTime24PickerHighlight(false);
+          return;
+        }
+        if (e.key === "Delete") { e.preventDefault(); mEl.value = ""; mFresh = false; return; }
+        if (e.key === "Enter") {
+          padSeg(mEl);
+          if (t24PickerEl && t24PickerEl.classList.contains("open")) {
+            e.stopPropagation();
+            closeTime24Picker();
+          }
+          return;
+        }
+        if (e.key.length === 1) e.preventDefault();
+      });
+      mEl.addEventListener("input", () => {
+        const d = mEl.value.replace(/\D/g, "").slice(0, 2);
+        if (d.length === 1 && parseInt(d, 10) >= 6) { mEl.value = `0${d}`; mFresh = true; }
+        else if (d.length === 2) { mEl.value = parseInt(d, 10) <= 59 ? d : `0${d[0]}`; mFresh = true; }
+        else { mEl.value = d; mFresh = false; }
+      });
+
+      const finalize = () => {
+        padSeg(hEl);
+        padSeg(mEl);
+        if (hEl.value !== "" && mEl.value === "") mEl.value = "00";
+      };
+
+      wrap.addEventListener("focusout", (e) => {
+        if (wrap.contains(e.relatedTarget)) return;
+        if (t24PickerEl && t24PickerEl.contains(e.relatedTarget)) return;
+        if (t24ActiveCtx && t24ActiveCtx.wrap === wrap) return;
+        finalize();
+      });
+
+      wrap.addEventListener("click", (e) => {
+        if (e.target === wrap || e.target === sep) {
+          hEl.focus();
+          hEl.select();
+        setTimeout(() => { if (hFresh && document.activeElement === hEl && hEl.value) hEl.select(); }, 0);
+        }
+      });
+
+      const ctx = {
+        wrap,
+        finalize,
+        getHour: () => (/^\d{1,2}$/.test(hEl.value.trim()) ? pad(parseInt(hEl.value.trim(), 10)) : ""),
+        getMin: () => (/^\d{1,2}$/.test(mEl.value.trim()) ? pad(parseInt(mEl.value.trim(), 10)) : ""),
+        setHour: (hh) => { hEl.value = hh; if (mEl.value === "") mEl.value = "00"; },
+        setMin: (mm) => { mEl.value = mm; if (hEl.value === "") hEl.value = "00"; },
+        clear: () => { hEl.value = ""; mEl.value = ""; }
+      };
+
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const pop = ensureTime24Picker();
+        if (t24ActiveCtx && t24ActiveCtx.wrap === wrap && pop.classList.contains("open")) {
+          closeTime24Picker();
+          return;
+        }
+        if (t24ActiveCtx) closeTime24Picker();
+        t24ActiveCtx = ctx;
+        wrap.classList.add("open");
+        pop.classList.add("open");
+        positionTime24Picker(wrap);
+        syncTime24PickerHighlight(true);
+      });
+
+      Object.defineProperty(wrap, "value", {
+        configurable: true,
+        get() {
+          const hr = hEl.value.trim();
+          const mn = mEl.value.trim();
+          if (!hr) return "";
+          const hh = parseInt(hr, 10);
+          if (Number.isNaN(hh) || hh < 0 || hh > 23) return "";
+          const mm = mn === "" ? 0 : parseInt(mn, 10);
+          if (Number.isNaN(mm) || mm < 0 || mm > 59) return "";
+          return `${pad(hh)}:${pad(mm)}`;
+        },
+        set(v) {
+          const str = (v === null || v === undefined) ? "" : String(v).trim();
+          if (!str) { hEl.value = ""; mEl.value = ""; return; }
+          const match = str.match(/^(\d{1,2}):(\d{1,2})$/);
+          if (match) {
+            const hh = parseInt(match[1], 10);
+            const mm = parseInt(match[2], 10);
+            if (hh >= 0 && hh <= 23 && mm >= 0 && mm <= 59) {
+              hEl.value = pad(hh);
+              mEl.value = pad(mm);
+              return;
+            }
+          }
+          hEl.value = "";
+          mEl.value = "";
+        }
+      });
+
+      Object.defineProperty(wrap, "isIncomplete", {
+        configurable: true,
+        get() {
+          return hEl.value.trim() === "" && mEl.value.trim() !== "";
+        }
+      });
+    });
+  }
+
   async function addTask() {
     const name = $("taskName").value.trim();
-    const time = $("taskTime").value;
-    const desc = $("taskDesc").value.trim();
-    const priority = $("taskPriority").value;
-
     if (!name) {
       flash("taskName");
       return;
     }
+
+    const timeEl = $("taskTime");
+    if (timeEl && timeEl.isIncomplete) {
+      flash("taskTime");
+      showToast("Giờ chưa hợp lệ", "Vui lòng nhập đủ giờ và phút (24h: 00:00 – 23:59).");
+      return;
+    }
+    const time = timeEl ? timeEl.value : "";
+    const desc = $("taskDesc").value.trim();
+    const priority = $("taskPriority").value;
 
     const key = todayKey();
     if (!appData.tasks[key]) appData.tasks[key] = [];
@@ -1065,6 +1578,7 @@
   }
 
   async function init() {
+    initTime24Inputs();
     initStars();
     bindEvents();
     initPomoAndBlocker();
