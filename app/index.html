@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>✦ NOVA PLANNER ✦</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&family=Patrick+Hand&display=swap">
 <style>
 :root{
   --bg:#06060f;--bg2:#0c0c1e;
@@ -666,22 +667,368 @@ select option{background:#0c0c1e;}
   50% { opacity: 0.4; transform: scale(1.3); }
 }
 
-/* ═══ TAB GHI CHÚ ═══ */
-.note-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-top:12px;}
-.note-card{position:relative;display:flex;flex-direction:column;gap:8px;padding:14px 14px 12px;border-radius:14px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.09);border-top:3px solid var(--nc,var(--c1));transition:transform .2s,box-shadow .2s,border-color .2s;min-height:120px;}
-.note-card:hover{transform:translateY(-2px);box-shadow:0 6px 22px rgba(0,0,0,.35);}
-.note-card.pinned{box-shadow:0 0 14px rgba(255,225,0,.12);border-color:rgba(255,225,0,.3);border-top-color:var(--nc,var(--c1));}
-.note-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
-.note-title{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;letter-spacing:.5px;color:var(--nc,var(--c1));word-break:break-word;line-height:1.4;}
-.note-pin{background:none;border:none;cursor:pointer;font-size:15px;line-height:1;flex-shrink:0;color:rgba(255,255,255,.3);}
-.note-body{font-size:13px;color:var(--txt);line-height:1.6;white-space:pre-wrap;word-break:break-word;flex:1;max-height:220px;overflow:auto;}
-.note-foot{display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;margin-top:2px;}
-.note-date{font-family:'Space Mono',monospace;font-size:9px;color:var(--mut);letter-spacing:.5px;}
-.note-acts{display:flex;gap:5px;}
-.note-colors{display:flex;gap:7px;align-items:center;flex-wrap:wrap;padding-top:4px;}
-.note-color{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .15s;}
-.note-color:hover{transform:scale(1.12);}
-.note-color.on{border-color:#fff;box-shadow:0 0 8px rgba(255,255,255,.4);}
+/* ═══ TAB GHI CHÚ (GIẤY NOTE BÀN HỌC) ═══ */
+/* Bố cục: thanh công cụ mỏng ở trên, phần còn lại là tấm lót bàn kẻ ô có thước ở mép trên; giấy note nằm tự do trên tấm lót. */
+#pnl-notes {
+  --ui: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --hand: 'Patrick Hand', 'Segoe Print', 'Bradley Hand', 'Comic Sans MS', cursive;
+  --w: clamp(156px, 42vw, 212px);
+
+  --sn-bg: #dfe8dc;
+  --mat: #a7c2aa;
+  --mat-line: rgba(255, 255, 255, 0.28);
+  --mat-line-strong: rgba(255, 255, 255, 0.5);
+  --mat-tick: rgba(20, 45, 30, 0.45);
+  --on-mat: #1d3526;
+
+  --bar-bg: #f3f7f1;
+  --bar-fg: #1d2b21;
+  --bar-muted: #566a5c;
+  --bar-line: #c4d3c4;
+  --btn-bg: #1f2a22;
+  --btn-bg-hover: #2f3d33;
+  --btn-fg: #fff0a0;
+
+  --paper-hi: #fff7a6;
+  --paper: #ffef78;
+  --paper-lo: #fde85c;
+  --ink: #2b2410;
+  --top-bg: rgba(120, 90, 0, 0.1);
+  --top-mark: rgba(110, 80, 0, 0.4);
+  --shadow-rest: 0 1px 1px rgba(25, 40, 28, 0.22), 0 7px 12px -5px rgba(25, 40, 28, 0.38);
+  --shadow-lift: 0 2px 4px rgba(25, 40, 28, 0.2), 0 22px 30px -10px rgba(25, 40, 28, 0.5);
+  --focus: #0b3d27;
+
+  --toast-bg: #1f2a22;
+  --toast-fg: #f3f7f1;
+  --toast-link: #fff0a0;
+
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  #pnl-notes:not([data-theme="light"]) {
+    --sn-bg: #121a15;
+    --mat: #1a2a21;
+    --mat-line: rgba(255, 255, 255, 0.045);
+    --mat-line-strong: rgba(255, 255, 255, 0.09);
+    --mat-tick: rgba(235, 255, 240, 0.35);
+    --on-mat: #b7cbbb;
+    --bar-bg: #15201a;
+    --bar-fg: #e6efe7;
+    --bar-muted: #93a898;
+    --bar-line: #26372c;
+    --btn-bg: #ffe96b;
+    --btn-bg-hover: #fff08a;
+    --btn-fg: #2b2410;
+    --paper-hi: #f7e98a;
+    --paper: #f1de6a;
+    --paper-lo: #e8d055;
+    --ink: #2b2410;
+    --top-bg: rgba(120, 90, 0, 0.12);
+    --top-mark: rgba(110, 80, 0, 0.45);
+    --shadow-rest: 0 1px 1px rgba(0, 0, 0, 0.4), 0 8px 14px -5px rgba(0, 0, 0, 0.6);
+    --shadow-lift: 0 2px 4px rgba(0, 0, 0, 0.45), 0 24px 32px -10px rgba(0, 0, 0, 0.7);
+    --focus: #ffe96b;
+    --toast-bg: #e6efe7;
+    --toast-fg: #15201a;
+    --toast-link: #6b4e00;
+    color-scheme: dark;
+  }
+}
+#pnl-notes[data-theme="dark"] {
+  --sn-bg: #121a15;
+  --mat: #1a2a21;
+  --mat-line: rgba(255, 255, 255, 0.045);
+  --mat-line-strong: rgba(255, 255, 255, 0.09);
+  --mat-tick: rgba(235, 255, 240, 0.35);
+  --on-mat: #b7cbbb;
+  --bar-bg: #15201a;
+  --bar-fg: #e6efe7;
+  --bar-muted: #93a898;
+  --bar-line: #26372c;
+  --btn-bg: #ffe96b;
+  --btn-bg-hover: #fff08a;
+  --btn-fg: #2b2410;
+  --paper-hi: #f7e98a;
+  --paper: #f1de6a;
+  --paper-lo: #e8d055;
+  --ink: #2b2410;
+  --top-bg: rgba(120, 90, 0, 0.12);
+  --top-mark: rgba(110, 80, 0, 0.45);
+  --shadow-rest: 0 1px 1px rgba(0, 0, 0, 0.4), 0 8px 14px -5px rgba(0, 0, 0, 0.6);
+  --shadow-lift: 0 2px 4px rgba(0, 0, 0, 0.45), 0 24px 32px -10px rgba(0, 0, 0, 0.7);
+  --focus: #ffe96b;
+  --toast-bg: #e6efe7;
+  --toast-fg: #15201a;
+  --toast-link: #6b4e00;
+  color-scheme: dark;
+}
+
+body.dragging { user-select: none; -webkit-user-select: none; }
+#pnl-notes [hidden]:not([hidden=until-found i]) { display: none !important; }
+
+#pnl-notes .sn-app {
+  display: flex;
+  flex-direction: column;
+  height: clamp(560px, calc(100dvh - 190px), 840px);
+  overflow: hidden;
+  overscroll-behavior: none;
+  border-radius: 16px;
+  border: 1px solid var(--bar-line);
+  background: var(--sn-bg);
+  color: var(--bar-fg);
+  font-family: var(--ui);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.45);
+}
+
+/* Thanh công cụ */
+#pnl-notes .bar {
+  flex: none;
+  padding-block: 10px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background: var(--bar-bg);
+  border-bottom: 1px solid var(--bar-line);
+}
+#pnl-notes .bar-in {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+#pnl-notes .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+#pnl-notes .logo {
+  position: relative;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 2px;
+  background: linear-gradient(172deg, var(--paper-hi), var(--paper-lo));
+  box-shadow: var(--shadow-rest);
+  rotate: -7deg;
+}
+#pnl-notes .logo::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 6px;
+  background: var(--top-bg);
+}
+#pnl-notes h1 { margin: 0; font-size: 17px; font-weight: 600; line-height: 1.2; color: var(--bar-fg); }
+#pnl-notes .count { margin: 2px 0 0; font-size: 12.5px; line-height: 1.2; color: var(--bar-muted); }
+#pnl-notes .add {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  font: 600 14px/1 var(--ui);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+#pnl-notes .add:hover { background: var(--btn-bg-hover); }
+#pnl-notes .add:active { translate: 0 1px; }
+#pnl-notes .add:focus-visible,
+#pnl-notes .del:focus-visible,
+#pnl-notes .grip:focus-visible,
+#pnl-notes .sn-toast button:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Mặt bàn */
+#pnl-notes .desk {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  padding-block: 18px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background:
+    linear-gradient(var(--mat-line-strong) 1px, transparent 1px) 0 0 / 120px 120px,
+    linear-gradient(90deg, var(--mat-line-strong) 1px, transparent 1px) 0 0 / 120px 120px,
+    linear-gradient(var(--mat-line) 1px, transparent 1px) 0 0 / 24px 24px,
+    linear-gradient(90deg, var(--mat-line) 1px, transparent 1px) 0 0 / 24px 24px,
+    var(--mat);
+}
+#pnl-notes .desk::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 12px;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(90deg, var(--mat-tick) 0 1px, transparent 1px 12px) left bottom / 100% 5px no-repeat,
+    repeating-linear-gradient(90deg, var(--mat-tick) 0 1px, transparent 1px 60px) left bottom / 100% 11px no-repeat;
+}
+#pnl-notes .layer {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  isolation: isolate;
+}
+#pnl-notes .empty {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: min(30ch, 100%);
+  height: max-content;
+  text-align: center;
+  font: 400 24px/1.3 var(--hand);
+  color: var(--on-mat);
+  pointer-events: none;
+}
+
+/* Giấy note */
+#pnl-notes .note {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--w);
+  aspect-ratio: 1;
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  translate: var(--x, 0px) var(--y, 0px);
+  rotate: calc(var(--r, 0deg) + var(--tilt, 0deg));
+  scale: 1;
+  border-radius: 2px;
+  background:
+    linear-gradient(to bottom right, transparent 88%, rgba(110, 80, 0, 0.14)),
+    linear-gradient(172deg, var(--paper-hi) 0%, var(--paper) 55%, var(--paper-lo) 100%);
+  color: var(--ink);
+  box-shadow: var(--shadow-rest);
+  transition: rotate 0.2s ease-out, scale 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+#pnl-notes .note:not(.editing) { touch-action: none; }
+#pnl-notes .note.editing { outline: 2px solid var(--focus); outline-offset: 4px; }
+#pnl-notes .note.lifted { scale: 1.045; box-shadow: var(--shadow-lift); }
+#pnl-notes .note.lifted, #pnl-notes .note.lifted * { cursor: grabbing !important; }
+#pnl-notes .note.is-new { animation: stick 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.2); }
+@keyframes stick {
+  from { scale: 1.18; opacity: 0; }
+  to { scale: 1; opacity: 1; }
+}
+
+#pnl-notes .top {
+  flex: none;
+  display: flex;
+  height: 30px;
+  background: var(--top-bg);
+}
+#pnl-notes .grip {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  cursor: grab;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+#pnl-notes .grip::before {
+  content: "";
+  position: absolute;
+  left: 14px;
+  top: 12px;
+  width: 24px;
+  height: 6px;
+  border-top: 1.5px solid var(--top-mark);
+  border-bottom: 1.5px solid var(--top-mark);
+}
+#pnl-notes .del {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+#pnl-notes .del:hover { background: rgba(110, 80, 0, 0.18); }
+#pnl-notes .note:hover .del, #pnl-notes .note.editing .del, #pnl-notes .del:focus-visible { opacity: 1; }
+@media (hover: none) { #pnl-notes .del { opacity: 1; } }
+
+#pnl-notes .note textarea {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  margin: 0;
+  padding: 8px 14px 14px;
+  border: 0;
+  border-radius: 0;
+  outline: 0;
+  box-shadow: none;
+  resize: none;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(110, 80, 0, 0.35) transparent;
+  background: transparent;
+  color: inherit;
+  caret-color: var(--ink);
+  font-family: var(--hand);
+  font-size: max(16px, calc(var(--fs, 10.5) * 1cqw));
+  line-height: 1.28;
+  cursor: grab;
+}
+#pnl-notes .note textarea:focus {
+  border: 0;
+  outline: 0;
+  box-shadow: none;
+  background: transparent;
+}
+#pnl-notes .note.editing textarea { cursor: text; }
+#pnl-notes .note textarea::placeholder { color: rgba(43, 36, 16, 0.42); }
+
+/* Thông báo hoàn tác */
+#pnl-notes .sn-toast {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  margin-inline: auto;
+  width: max-content;
+  max-width: calc(100% - 32px);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 10px 10px 16px;
+  border-radius: 10px;
+  background: var(--toast-bg);
+  color: var(--toast-fg);
+  font-size: 14px;
+  box-shadow: var(--shadow-lift);
+  z-index: 9999999;
+}
+#pnl-notes .sn-toast button {
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--toast-link);
+  font: 600 14px/1 var(--ui);
+  cursor: pointer;
+}
+#pnl-notes .sn-toast button:hover { text-decoration: underline; }
+
+@media (prefers-reduced-motion: reduce) {
+  #pnl-notes .note, #pnl-notes .del { transition: none; }
+  #pnl-notes .note.is-new { animation: none; }
+}
 
 /* ═══ 24H TIME INPUT ═══ */
 .t24{display:flex;align-items:center;gap:2px;width:100%;min-height:39px;
@@ -1096,37 +1443,33 @@ select option{background:#0c0c1e;}
 
   <!-- ══ TAB GHI CHÚ ══ -->
   <div class="pnl" id="pnl-notes">
-    <div class="srow">
-      <div class="sb"><div class="sv" id="ntCount">0</div><div class="sl">Ghi chú</div></div>
-      <div class="sb"><div class="sv" id="ntPinCount" style="color:var(--c3)">0</div><div class="sl">Đã ghim 📌</div></div>
-      <div class="sb"><div class="sv" id="ntTodayCount" style="color:var(--c4)">0</div><div class="sl">Hôm nay</div></div>
-    </div>
-    <div class="card kpurple">
-      <div class="ct pu" id="ntFormTitle">📝 THÊM GHI CHÚ MỚI</div>
-      <input type="hidden" id="ntEditId" value="" />
-      <div class="fr">
-        <div class="fg"><label class="fl">Tiêu đề</label>
-          <input type="text" id="ntTitle" placeholder="Ví dụ: Ý tưởng dự án, việc cần nhớ..." maxlength="120"/></div>
+    <div class="sn-app">
+      <header class="bar">
+        <div class="bar-in">
+          <div class="brand">
+            <span class="logo" aria-hidden="true"></span>
+            <div>
+              <h1>Giấy note</h1>
+              <p class="count" id="count" aria-live="polite"></p>
+            </div>
+          </div>
+          <button class="add" id="add" type="button">
+            <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+            Thêm giấy note
+          </button>
+        </div>
+      </header>
+
+      <main class="desk" aria-label="Mặt bàn">
+        <div class="layer" id="layer">
+          <p class="empty" id="empty" hidden>Bàn đang trống. Bấm “Thêm giấy note” để dán tờ đầu tiên.</p>
+        </div>
+      </main>
+
+      <div class="sn-toast" id="toast" role="status" hidden>
+        <span id="toast-text"></span>
+        <button type="button" id="undo">Hoàn tác</button>
       </div>
-      <div class="fr">
-        <div class="fg"><label class="fl">Nội dung *</label>
-          <textarea id="ntContent" rows="5" placeholder="Viết ghi chú của bạn... (Ctrl + Enter để lưu)"></textarea></div>
-      </div>
-      <div class="fr" style="align-items:center;">
-        <div class="fg"><label class="fl">Màu thẻ</label>
-          <div class="note-colors" id="ntColors"></div></div>
-      </div>
-      <div style="display:flex;gap:8px;margin-top:6px;">
-        <button class="btn bpu" id="ntSaveBtn" style="flex:1;" onclick="saveNote()">✦ LƯU GHI CHÚ</button>
-        <button class="btn bgh" id="ntCancelBtn" style="display:none;" onclick="cancelEditNote()">✕ Hủy sửa</button>
-      </div>
-    </div>
-    <div class="card kpurple">
-      <div class="ct pu" style="justify-content:space-between;flex-wrap:wrap;gap:8px;">
-        <span>🗂️ DANH SÁCH GHI CHÚ</span>
-        <input type="text" id="ntSearch" placeholder="🔍 Tìm ghi chú..." oninput="renderNotes()" style="max-width:220px;padding:6px 10px;font-size:12px;"/>
-      </div>
-      <div class="note-grid" id="noteList"></div>
     </div>
   </div>
 
@@ -3874,159 +4217,294 @@ function deletePrinciple(id){
 }
 
 // ═══════════════════════════════════
-// ═══ TAB GHI CHÚ ═══
+// ═══ TAB GHI CHÚ (GIẤY NOTE BÀN HỌC) ═══
 // ═══════════════════════════════════
-var NOTE_COLORS=['#00f5ff','#ff00c8','#ffe100','#39ff14','#ff6b35','#a855f7'];
-var ntColor=NOTE_COLORS[0];
+(function () {
+  'use strict';
 
-function initNotes(){
-  if(!D.notes||!Array.isArray(D.notes))D.notes=[];
-}
+  /*PURE-START*/
+  function clamp(v, a, b) { return Math.min(b, Math.max(a, v)); }
+  // Vị trí lưu dưới dạng tỉ lệ 0..1 trong vùng còn trống của mặt bàn, nên mọi kích thước màn hình đều giữ tờ giấy nằm trọn trong bàn.
+  function toPx(fx, fy, fw, fh, nw, nh) {
+    var mx = Math.max(0, fw - nw), my = Math.max(0, fh - nh);
+    return { x: Math.round(clamp(fx, 0, 1) * mx), y: Math.round(clamp(fy, 0, 1) * my) };
+  }
+  function toFrac(x, y, fw, fh, nw, nh) {
+    var mx = Math.max(0, fw - nw), my = Math.max(0, fh - nh);
+    return { fx: mx ? clamp(x / mx, 0, 1) : 0, fy: my ? clamp(y / my, 0, 1) : 0 };
+  }
+  // Chữ ít thì viết to, chữ nhiều thì viết nhỏ lại cho vừa tờ giấy.
+  function fontRatio(len) { return len <= 40 ? 12.5 : len <= 90 ? 10.5 : len <= 160 ? 9 : 7.8; }
+  /*PURE-END*/
 
-function fmtNoteDate(ts){
-  if(!ts)return '';
-  var d=new Date(ts);
-  return pad(d.getHours())+':'+pad(d.getMinutes())+' · '+pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear();
-}
+  var KEY = 'ban-hoc-giay-note-v1';
+  var STEP = 16, STEP_BIG = 64, MAXLEN = 280;
 
-function renderNoteColors(){
-  var box=getEl('ntColors');if(!box)return;
-  var html='';
-  NOTE_COLORS.forEach(function(col){
-    html+='<div class="note-color'+(col===ntColor?' on':'')+'" style="background:'+col+'" title="Chọn màu" onclick="pickNoteColor(\''+col+'\')"></div>';
-  });
-  box.innerHTML=html;
-}
+  var layer = document.getElementById('layer');
+  var emptyEl = document.getElementById('empty');
+  var countEl = document.getElementById('count');
+  var addBtn = document.getElementById('add');
+  var toast = document.getElementById('toast');
+  var toastText = document.getElementById('toast-text');
+  var undoBtn = document.getElementById('undo');
 
-function pickNoteColor(col){
-  ntColor=col;
-  renderNoteColors();
-}
+  var SEED = [
+    { id: 's1', text: 'Kéo tờ này sang chỗ khác. Bấm vào chữ để sửa, bấm × để bỏ. Các note mẫu xóa được.', fx: 0.06, fy: 0.10, r: -2.4, z: 1 },
+    { id: 's2', text: 'Nộp bài tập nhóm\nthứ Hai, 8:00', fx: 0.40, fy: 0.04, r: 1.9, z: 2 },
+    { id: 's3', text: 'Ôn thi giữa kỳ:\n- chương 3 đến 5\n- làm lại đề cũ', fx: 0.74, fy: 0.16, r: -1.3, z: 3 },
+    { id: 's4', text: 'Mua pin và dây sạc', fx: 0.22, fy: 0.66, r: 2.7, z: 4 },
+    { id: 's5', text: 'Học nhóm 19:00 tối nay, nhớ mang laptop', fx: 0.58, fy: 0.60, r: -3.1, z: 5 }
+  ];
 
-function renderNotes(){
-  initNotes();
-  renderNoteColors();
-  var list=D.notes;
-  var today=todayKey();
-  setText('ntCount',list.length);
-  setText('ntPinCount',list.filter(function(n){return n.pinned;}).length);
-  setText('ntTodayCount',list.filter(function(n){
-    var d=new Date(n.updatedAt||n.createdAt||0);
-    return dKey(d.getFullYear(),d.getMonth()+1,d.getDate())===today;
-  }).length);
+  var state = { notes: [], zTop: 0 };
+  var els = {};
+  var lastRemoved = null;
+  var saveTimer = 0, toastTimer = 0;
 
-  var box=getEl('noteList');if(!box)return;
-  var q=(getVal('ntSearch')||'').trim().toLowerCase();
-  var filtered=list.filter(function(n){
-    if(!q)return true;
-    return (n.title||'').toLowerCase().indexOf(q)>=0||(n.content||'').toLowerCase().indexOf(q)>=0;
-  });
-  filtered.sort(function(a,b){
-    if(a.pinned&&!b.pinned)return -1;
-    if(!a.pinned&&b.pinned)return 1;
-    return (b.updatedAt||b.createdAt||0)-(a.updatedAt||a.createdAt||0);
-  });
+  function clean(n) {
+    return {
+      id: String(n.id || newId()),
+      text: String(n.text).slice(0, MAXLEN),
+      fx: clamp(+n.fx, 0, 1),
+      fy: clamp(+n.fy, 0, 1),
+      r: clamp(+n.r || 0, -8, 8),
+      z: Math.max(1, Math.floor(+n.z || 1))
+    };
+  }
+  function valid(n) {
+    return n && typeof n.text === 'string' && isFinite(n.fx) && isFinite(n.fy);
+  }
+  function newId() { return 'n' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 
-  if(!filtered.length){
-    box.innerHTML='<div class="es" style="grid-column:1/-1;padding:24px 10px;"><div class="ei">📝</div><div class="et">'+(q?'Không tìm thấy ghi chú phù hợp.':'Chưa có ghi chú nào — hãy viết ghi chú đầu tiên!')+'</div></div>';
-    return;
+  function load() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (!raw) return null;
+      var d = JSON.parse(raw);
+      if (!d || !Array.isArray(d.notes)) return null;
+      return d.notes.filter(valid).map(clean);
+    } catch (e) { return null; }
+  }
+  function save() {
+    clearTimeout(saveTimer);
+    saveTimer = 0;
+    try { localStorage.setItem(KEY, JSON.stringify({ notes: state.notes })); } catch (e) { /* bỏ qua */ }
+  }
+  function saveSoon() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(save, 250);
+  }
+  function flush() { if (saveTimer) save(); }
+
+  function raise(n) {
+    n.z = ++state.zTop;
+    if (els[n.id]) els[n.id].style.zIndex = n.z;
   }
 
-  var html='';
-  filtered.forEach(function(n){
-    var col=n.color||NOTE_COLORS[0];
-    html+='<div class="note-card'+(n.pinned?' pinned':'')+'" style="--nc:'+col+'">';
-    html+='<div class="note-head">';
-    html+='<div class="note-title">'+esc(n.title||'Ghi chú')+'</div>';
-    html+='<button class="note-pin" title="'+(n.pinned?'Bỏ ghim':'Ghim lên đầu')+'" onclick="togglePinNote(\''+n.id+'\')" style="'+(n.pinned?'color:#ffe100;':'')+'">'+(n.pinned?'📌':'📍')+'</button>';
-    html+='</div>';
-    html+='<div class="note-body">'+esc(n.content||'')+'</div>';
-    html+='<div class="note-foot">';
-    html+='<span class="note-date">'+(n.updatedAt&&n.updatedAt!==n.createdAt?'✏️ ':'🕒 ')+fmtNoteDate(n.updatedAt||n.createdAt)+'</span>';
-    html+='<div class="note-acts">';
-    html+='<button class="btn byl bxs" onclick="editNote(\''+n.id+'\')">✏️ Sửa</button>';
-    html+='<button class="btn bdel bxs" onclick="deleteNote(\''+n.id+'\')">✕ Xóa</button>';
-    html+='</div></div>';
-    html+='</div>';
-  });
-  box.innerHTML=html;
-}
+  function layoutOne(n) {
+    var el = els[n.id];
+    if (!el) return;
+    var p = toPx(n.fx, n.fy, layer.clientWidth, layer.clientHeight, el.offsetWidth, el.offsetHeight);
+    el.style.setProperty('--x', p.x + 'px');
+    el.style.setProperty('--y', p.y + 'px');
+  }
+  function layoutAll() { state.notes.forEach(layoutOne); }
 
-function findNote(id){
-  initNotes();
-  for(var i=0;i<D.notes.length;i++)if(D.notes[i].id===id)return D.notes[i];
-  return null;
-}
+  function refresh() {
+    var c = state.notes.length;
+    countEl.textContent = c ? c + ' tờ trên bàn' : 'Bàn trống';
+    emptyEl.hidden = c !== 0;
+  }
 
-function saveNote(){
-  initNotes();
-  var title=getVal('ntTitle').trim();
-  var content=getVal('ntContent').trim();
-  if(!content){flashEl('ntContent');showToast('Thiếu nội dung','Vui lòng nhập nội dung ghi chú!');return;}
-  var editId=getVal('ntEditId');
-  var now=Date.now();
-  if(editId){
-    var item=findNote(editId);
-    if(item){
-      item.title=title;item.content=content;item.color=ntColor;item.updatedAt=now;
-      showToast('✏️ Đã cập nhật','Ghi chú đã được chỉnh sửa.');
+  function showToast(msg) {
+    toastText.textContent = msg;
+    toast.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(hideToast, 6000);
+  }
+  function hideToast() {
+    clearTimeout(toastTimer);
+    toast.hidden = true;
+  }
+
+  function mount(n) {
+    var el = document.createElement('div');
+    el.className = 'note';
+    el.innerHTML =
+      '<div class="top">' +
+        '<div class="grip" tabindex="0" role="button" aria-label="Di chuyển giấy note. Dùng phím mũi tên."></div>' +
+        '<button class="del" type="button" aria-label="Bỏ tờ note này">' +
+          '<svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>' +
+        '</button>' +
+      '</div>' +
+      '<textarea maxlength="' + MAXLEN + '" spellcheck="false" lang="vi" placeholder="Viết gì đó…" aria-label="Nội dung giấy note"></textarea>';
+
+    var ta = el.querySelector('textarea');
+    var grip = el.querySelector('.grip');
+    var del = el.querySelector('.del');
+    ta.value = n.text;
+
+    el.style.setProperty('--r', n.r + 'deg');
+    el.style.setProperty('--fs', fontRatio(n.text.length));
+    el.style.zIndex = n.z;
+    els[n.id] = el;
+    layer.appendChild(el);
+    layoutOne(n);
+
+    el.addEventListener('animationend', function () { el.classList.remove('is-new'); });
+
+    ta.addEventListener('input', function () {
+      n.text = ta.value;
+      el.style.setProperty('--fs', fontRatio(n.text.length));
+      saveSoon();
+    });
+    ta.addEventListener('focus', function () {
+      el.classList.add('editing');
+      raise(n);
+      saveSoon();
+    });
+    ta.addEventListener('blur', function () { el.classList.remove('editing'); });
+    del.addEventListener('click', function () { removeNote(n.id); });
+
+    // Kéo bằng chuột hoặc ngón tay: kéo từ dải trên, hoặc từ thân tờ giấy khi chưa gõ chữ.
+    var drag = null;
+    el.addEventListener('pointerdown', function (e) {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      if (e.target.closest('.del')) return;
+      var onText = e.target === ta;
+      if (onText && document.activeElement === ta) return;
+      if (onText) e.preventDefault();
+      var p = toPx(n.fx, n.fy, layer.clientWidth, layer.clientHeight, el.offsetWidth, el.offsetHeight);
+      drag = { id: e.pointerId, sx: e.clientX, sy: e.clientY, x0: p.x, y0: p.y, lx: e.clientX, tilt: 0, active: false, onText: onText };
+      try { el.setPointerCapture(e.pointerId); } catch (err) { /* bỏ qua */ }
+    });
+    el.addEventListener('pointermove', function (e) {
+      if (!drag || e.pointerId !== drag.id) return;
+      var dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
+      if (!drag.active) {
+        if (Math.abs(dx) + Math.abs(dy) < 5) return;
+        drag.active = true;
+        el.classList.add('lifted');
+        document.body.classList.add('dragging');
+        raise(n);
+      }
+      var fw = layer.clientWidth, fh = layer.clientHeight, nw = el.offsetWidth, nh = el.offsetHeight;
+      var x = clamp(drag.x0 + dx, 0, Math.max(0, fw - nw));
+      var y = clamp(drag.y0 + dy, 0, Math.max(0, fh - nh));
+      el.style.setProperty('--x', x + 'px');
+      el.style.setProperty('--y', y + 'px');
+      var f = toFrac(x, y, fw, fh, nw, nh);
+      n.fx = f.fx;
+      n.fy = f.fy;
+      var vx = e.clientX - drag.lx;
+      drag.lx = e.clientX;
+      drag.tilt += (clamp(vx * 0.7, -8, 8) - drag.tilt) * 0.3;
+      el.style.setProperty('--tilt', drag.tilt.toFixed(2) + 'deg');
+    });
+    function end(e) {
+      if (!drag || e.pointerId !== drag.id) return;
+      var d = drag;
+      drag = null;
+      if (d.active) {
+        el.classList.remove('lifted');
+        document.body.classList.remove('dragging');
+        el.style.setProperty('--tilt', '0deg');
+        save();
+      } else if (d.onText && e.type === 'pointerup') {
+        ta.focus();
+      }
     }
-    cancelEditNote();
-  } else {
-    D.notes.push({id:uid(),title:title,content:content,color:ntColor,pinned:false,createdAt:now,updatedAt:now});
-    setVal('ntTitle','');setVal('ntContent','');
-    showToast('📝 Đã lưu ghi chú',title?esc(title):'Ghi chú mới đã được lưu.');
-    playAdd();
+    el.addEventListener('pointerup', end);
+    el.addEventListener('pointercancel', end);
+
+    // Di chuyển bằng bàn phím.
+    grip.addEventListener('keydown', function (e) {
+      var s = e.shiftKey ? STEP_BIG : STEP, dx = 0, dy = 0;
+      if (e.key === 'ArrowLeft') dx = -s;
+      else if (e.key === 'ArrowRight') dx = s;
+      else if (e.key === 'ArrowUp') dy = -s;
+      else if (e.key === 'ArrowDown') dy = s;
+      else return;
+      e.preventDefault();
+      var fw = layer.clientWidth, fh = layer.clientHeight, nw = el.offsetWidth, nh = el.offsetHeight;
+      var p = toPx(n.fx, n.fy, fw, fh, nw, nh);
+      var f = toFrac(p.x + dx, p.y + dy, fw, fh, nw, nh);
+      n.fx = f.fx;
+      n.fy = f.fy;
+      raise(n);
+      layoutOne(n);
+      saveSoon();
+    });
+
+    return el;
   }
-  saveD();
-  renderNotes();
-}
 
-function editNote(id){
-  var item=findNote(id);if(!item)return;
-  setVal('ntEditId',item.id);
-  setVal('ntTitle',item.title||'');
-  setVal('ntContent',item.content||'');
-  ntColor=item.color||NOTE_COLORS[0];
-  renderNoteColors();
-  setText('ntFormTitle','✏️ CHỈNH SỬA GHI CHÚ');
-  setText('ntSaveBtn','✦ LƯU THAY ĐỔI');
-  getEl('ntCancelBtn').style.display='';
-  var inp=getEl('ntContent');
-  if(inp){inp.focus();inp.scrollIntoView({behavior:'smooth',block:'center'});}
-}
-
-function cancelEditNote(){
-  setVal('ntEditId','');setVal('ntTitle','');setVal('ntContent','');
-  ntColor=NOTE_COLORS[0];
-  renderNoteColors();
-  setText('ntFormTitle','📝 THÊM GHI CHÚ MỚI');
-  setText('ntSaveBtn','✦ LƯU GHI CHÚ');
-  getEl('ntCancelBtn').style.display='none';
-}
-
-function togglePinNote(id){
-  var item=findNote(id);if(!item)return;
-  item.pinned=!item.pinned;
-  saveD();renderNotes();
-}
-
-function deleteNote(id){
-  var item=findNote(id);if(!item)return;
-  var label=item.title||(item.content||'').slice(0,40);
-  if(!confirm('Bạn có chắc muốn xóa ghi chú này không?\n\n"'+label+'"'))return;
-  if(getVal('ntEditId')===id)cancelEditNote();
-  D.notes=D.notes.filter(function(n){return n.id!==id;});
-  saveD();renderNotes();
-  showToast('🗑️ Đã xóa','Ghi chú đã được gỡ bỏ.');
-}
-
-// Ctrl + Enter trong ô nội dung ghi chú để lưu nhanh
-document.addEventListener('keydown',function(e){
-  if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)&&document.activeElement&&document.activeElement.id==='ntContent'){
-    e.preventDefault();saveNote();
+  function addNote() {
+    var best = { fx: 0.5, fy: 0.5 }, bestD = -1;
+    for (var i = 0; i < 10; i++) {
+      var fx = 0.08 + Math.random() * 0.84, fy = 0.08 + Math.random() * 0.8, d = Infinity;
+      state.notes.forEach(function (o) {
+        var dd = Math.hypot(o.fx - fx, o.fy - fy);
+        if (dd < d) d = dd;
+      });
+      if (d > bestD) { bestD = d; best = { fx: fx, fy: fy }; }
+    }
+    var tilt = (1 + Math.random() * 3.5) * (Math.random() < 0.5 ? -1 : 1);
+    var n = { id: newId(), text: '', fx: best.fx, fy: best.fy, r: Math.round(tilt * 10) / 10, z: ++state.zTop };
+    state.notes.push(n);
+    var el = mount(n);
+    el.classList.add('is-new');
+    refresh();
+    save();
+    el.querySelector('textarea').focus();
   }
-});
+
+  function removeNote(id) {
+    var idx = -1;
+    state.notes.forEach(function (n, i) { if (n.id === id) idx = i; });
+    if (idx < 0) return;
+    var n = state.notes.splice(idx, 1)[0];
+    if (els[id]) { els[id].remove(); delete els[id]; }
+    lastRemoved = { n: n, idx: idx };
+    refresh();
+    save();
+    showToast('Đã bỏ 1 tờ giấy note');
+  }
+
+  function undo() {
+    if (!lastRemoved) return;
+    var n = lastRemoved.n;
+    state.notes.splice(Math.min(lastRemoved.idx, state.notes.length), 0, n);
+    lastRemoved = null;
+    raise(n);
+    var el = mount(n);
+    el.classList.add('is-new');
+    refresh();
+    save();
+    hideToast();
+  }
+
+  addBtn.addEventListener('click', addNote);
+  undoBtn.addEventListener('click', undo);
+
+  var saved = load();
+  var initial = saved === null ? SEED.map(clean) : saved;
+  state.notes = initial;
+  state.zTop = initial.reduce(function (m, n) { return Math.max(m, n.z); }, 0);
+  state.notes.forEach(mount);
+  refresh();
+
+  if (window.ResizeObserver) new ResizeObserver(layoutAll).observe(layer);
+  else window.addEventListener('resize', layoutAll);
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') flush(); });
+  window.addEventListener('pagehide', flush);
+
+  window.initNotes = function () {};
+  window.renderNotes = function () {
+    layoutAll();
+    refresh();
+  };
+})();
 
 // ═══ ENTER KEY ═══
 document.addEventListener('keydown',function(e){
@@ -4038,7 +4516,6 @@ document.addEventListener('keydown',function(e){
     else if(getEl('moRev').classList.contains('open')){}
     else if(document.activeElement&&document.activeElement.id==='tName')addTask();
     else if(document.activeElement&&document.activeElement.id==='prInput')savePrinciple();
-    else if(document.activeElement&&document.activeElement.id==='ntTitle'){e.preventDefault();getEl('ntContent').focus();}
   }
 });
 
