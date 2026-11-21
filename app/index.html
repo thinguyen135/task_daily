@@ -1211,10 +1211,144 @@ body.dragging { user-select: none; -webkit-user-select: none; }
 }
 #pnl-photos .add:hover { background: var(--btn-bg-hover); }
 #pnl-photos .add:active { translate: 0 1px; }
-#pnl-photos .add:focus-visible, #pnl-photos .ph-toast button:focus-visible {
+#pnl-photos .add:focus-visible,
+#pnl-photos .page-nav:focus-visible,
+#pnl-photos .page-add:focus-visible,
+#pnl-photos .page-tab:focus-visible,
+#pnl-photos .page-act:focus-visible,
+#pnl-photos .ph-toast button:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
+
+/* Thanh chuyển trang ảnh bàn học */
+#pnl-photos .page-bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-block: 7px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background: var(--ph-bg);
+  border-bottom: 1px solid var(--bar-line);
+}
+#pnl-photos .page-nav {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--bar-line);
+  border-radius: 7px;
+  background: var(--bar-bg);
+  color: var(--bar-fg);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+#pnl-photos .page-nav:hover:not(:disabled) { border-color: var(--focus); }
+#pnl-photos .page-nav:disabled { opacity: 0.35; cursor: default; }
+#pnl-photos .page-list {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-block: 1px;
+}
+#pnl-photos .page-list::-webkit-scrollbar { display: none; }
+#pnl-photos .page-tab {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--bar-line);
+  border-radius: 8px;
+  background: var(--bar-bg);
+  color: var(--bar-fg);
+  font: 500 13px/1 var(--ui);
+  cursor: pointer;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+#pnl-photos .page-tab:hover:not(.act) { border-color: var(--focus); }
+#pnl-photos .page-tab.act {
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  border-color: var(--btn-bg);
+  font-weight: 600;
+}
+#pnl-photos .page-name { max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
+#pnl-photos .page-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: rgba(127, 127, 127, 0.18);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+}
+#pnl-photos .page-tab.act .page-badge { background: rgba(255, 255, 255, 0.18); }
+#pnl-photos .page-act {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: inherit;
+  opacity: 0.75;
+  cursor: pointer;
+}
+#pnl-photos .page-act:hover { opacity: 1; background: rgba(127, 127, 127, 0.25); }
+#pnl-photos .page-rename-in {
+  width: 116px;
+  height: 22px;
+  margin: 0;
+  padding: 0 6px;
+  border: 1px solid var(--focus);
+  border-radius: 5px;
+  outline: 0;
+  box-shadow: none;
+  background: var(--bar-bg);
+  color: var(--bar-fg);
+  font: 600 12.5px/1 var(--ui);
+}
+#pnl-photos .page-rename-in:focus {
+  border-color: var(--focus);
+  box-shadow: none;
+  background: var(--bar-bg);
+}
+#pnl-photos .page-add {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 30px;
+  padding: 0 11px;
+  border: 1px dashed var(--bar-muted);
+  border-radius: 8px;
+  background: var(--bar-bg);
+  color: var(--bar-fg);
+  font: 600 12.5px/1 var(--ui);
+  cursor: pointer;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+#pnl-photos .page-add:hover { border-style: solid; border-color: var(--focus); }
+#pnl-photos .page-add:active { translate: 0 1px; }
 
 /* Mặt bàn */
 #pnl-photos .desk {
@@ -1891,9 +2025,23 @@ body.dragging { user-select: none; -webkit-user-select: none; }
         </div>
       </header>
 
+      <nav class="page-bar" aria-label="Các trang ảnh bàn học">
+        <button class="page-nav" id="ph-prev" type="button" aria-label="Trang trước" title="Trang trước">
+          <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M10 3.5L5.5 8 10 12.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+        </button>
+        <div class="page-list" id="ph-pages" role="tablist" aria-label="Danh sách trang ảnh bàn học"></div>
+        <button class="page-nav" id="ph-next" type="button" aria-label="Trang sau" title="Trang sau">
+          <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M6 3.5L10.5 8 6 12.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+        </button>
+        <button class="page-add" id="ph-add-page" type="button" title="Thêm trang ảnh bàn học mới">
+          <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+          <span>Thêm trang</span>
+        </button>
+      </nav>
+
       <div class="desk" role="region" aria-label="Mặt bàn ảnh">
         <div class="layer" id="ph-layer">
-          <p class="empty" id="ph-empty" hidden>Bàn đang trống. Bấm “Tải ảnh lên” hoặc thả ảnh vào đây.</p>
+          <p class="empty" id="ph-empty" hidden>Trang này đang trống. Bấm “Tải ảnh lên” hoặc thả ảnh vào đây.</p>
         </div>
         <div class="drop" id="ph-drop" hidden>Thả ảnh vào đây</div>
       </div>
@@ -4962,7 +5110,7 @@ function deletePrinciple(id){
   /*PURE-END*/
 
   var DB_NAME = 'ban-hoc-anh';
-  var MAXSIDE = 1100, QUALITY = 0.84, MAXPHOTOS = 60;
+  var MAXSIDE = 1100, QUALITY = 0.84, MAXPHOTOS = 60, MAXPAGES = 30, PAGELEN = 32;
   var MINW = 110, MAXW = 520, STEP = 16, STEP_BIG = 64, CAPLEN = 40;
 
   var pnl = document.getElementById('pnl-photos');
@@ -4975,8 +5123,15 @@ function deletePrinciple(id){
   var toast = document.getElementById('ph-toast');
   var toastText = document.getElementById('ph-toast-text');
   var undoBtn = document.getElementById('ph-undo');
+  var pagesEl = document.getElementById('ph-pages');
+  var prevBtn = document.getElementById('ph-prev');
+  var nextBtn = document.getElementById('ph-next');
+  var addPageBtn = document.getElementById('ph-add-page');
 
   var db = null;
+  var pages = [];
+  var activePageId = '';
+  var editingPageId = null;
   var photos = [];
   var els = {};
   var zTop = 0;
@@ -4989,10 +5144,26 @@ function deletePrinciple(id){
   function isActive() { return !!pnl && pnl.classList.contains('act'); }
   function refLayerWidth() { return layer.clientWidth || Math.min(window.innerWidth - 60, 1100); }
   function newId() { return 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
-  function meta(n) { return { id: n.id, ar: n.ar, w: n.w, fx: n.fx, fy: n.fy, r: n.r, z: n.z, cap: n.cap }; }
-  function clean(m, src) {
+  function newPageId() { return 'pg' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5); }
+  function hasPage(id) { return pages.some(function (pg) { return pg.id === id; }); }
+  function currentPage() {
+    for (var i = 0; i < pages.length; i++) if (pages[i].id === activePageId) return pages[i];
+    return pages[0] || null;
+  }
+  function currentPhotos() {
+    return photos.filter(function (n) { return n.pageId === activePageId; });
+  }
+  function countOnPage(pid) {
+    var c = 0;
+    for (var i = 0; i < photos.length; i++) if (photos[i].pageId === pid) c++;
+    return c;
+  }
+  function meta(n) { return { id: n.id, pageId: n.pageId, ar: n.ar, w: n.w, fx: n.fx, fy: n.fy, r: n.r, z: n.z, cap: n.cap }; }
+  function clean(m, src, fallbackPageId) {
+    var pid = m.pageId && hasPage(String(m.pageId)) ? String(m.pageId) : fallbackPageId;
     return {
       id: String(m.id),
+      pageId: pid,
       src: src,
       ar: clamp(+m.ar || 1.33, 0.56, 1.9),
       w: clamp(+m.w || 180, MINW, MAXW),
@@ -5002,6 +5173,21 @@ function deletePrinciple(id){
       z: Math.max(1, Math.floor(+m.z || 1)),
       cap: String(m.cap || '').slice(0, CAPLEN)
     };
+  }
+  function cleanPages(raw) {
+    var out = [], seen = {};
+    if (Array.isArray(raw)) {
+      raw.forEach(function (p) {
+        if (!p || !p.id) return;
+        var id = String(p.id);
+        if (seen[id]) return;
+        seen[id] = true;
+        var name = String(p.name || '').trim().slice(0, PAGELEN) || ('Trang ' + (out.length + 1));
+        out.push({ id: id, name: name });
+      });
+    }
+    if (!out.length) out.push({ id: 'page-1', name: 'Trang 1' });
+    return out;
   }
 
   /* ---------- Lưu trữ (IndexedDB) ---------- */
@@ -5063,6 +5249,13 @@ function deletePrinciple(id){
       t.objectStore('photos').put(meta(n));
     });
   }
+  function persistPages() {
+    idbWrite(function (t) {
+      var m = t.objectStore('meta');
+      m.put(pages.map(function (p) { return { id: p.id, name: p.name }; }), 'pages');
+      m.put(activePageId, 'activePageId');
+    });
+  }
   function touch(n) {
     dirty[n.id] = n;
     clearTimeout(dirtyTimer);
@@ -5094,14 +5287,196 @@ function deletePrinciple(id){
     toast.hidden = true;
   }
   function refresh() {
-    var c = photos.length;
-    countEl.textContent = c ? c + ' ảnh trên bàn' : 'Bàn trống';
+    var c = currentPhotos().length;
+    var pg = currentPage();
+    var prefix = pg && (pages.length > 1 || pg.name !== 'Trang 1') ? pg.name + ' · ' : '';
+    countEl.textContent = prefix + (c ? c + ' ảnh trên bàn' : 'Bàn trống');
     emptyEl.hidden = c !== 0;
   }
   function raise(n) {
     n.z = ++zTop;
     if (els[n.id]) els[n.id].style.zIndex = n.z;
     touch(n);
+  }
+
+  /* ---------- Quản lý trang ảnh bàn học ---------- */
+  function renderPages() {
+    if (!pagesEl) return;
+    pagesEl.innerHTML = '';
+    var curIdx = -1;
+    pages.forEach(function (pg, i) {
+      var isAct = pg.id === activePageId;
+      if (isAct) curIdx = i;
+      var cnt = countOnPage(pg.id);
+      var tab = document.createElement('div');
+      tab.className = 'page-tab' + (isAct ? ' act' : '');
+      tab.setAttribute('role', 'tab');
+      tab.setAttribute('aria-selected', isAct ? 'true' : 'false');
+      tab.tabIndex = 0;
+      tab.title = pg.name + ' (nháy đúp để đổi tên)';
+
+      if (editingPageId === pg.id) {
+        var inp = document.createElement('input');
+        inp.type = 'text';
+        inp.className = 'page-rename-in';
+        inp.maxLength = PAGELEN;
+        inp.value = pg.name;
+        inp.setAttribute('aria-label', 'Tên trang ảnh');
+        var done = false;
+        function commit(save) {
+          if (done) return;
+          done = true;
+          var nextName = inp.value.trim().slice(0, PAGELEN);
+          if (save && nextName) {
+            pg.name = nextName;
+            persistPages();
+          }
+          editingPageId = null;
+          renderPages();
+          refresh();
+        }
+        inp.addEventListener('keydown', function (e) {
+          e.stopPropagation();
+          if (e.key === 'Enter') { e.preventDefault(); commit(true); }
+          else if (e.key === 'Escape') { e.preventDefault(); commit(false); }
+        });
+        inp.addEventListener('blur', function () { commit(true); });
+        inp.addEventListener('click', function (e) { e.stopPropagation(); });
+        tab.appendChild(inp);
+        pagesEl.appendChild(tab);
+        setTimeout(function () { inp.focus(); inp.select(); }, 0);
+        return;
+      }
+
+      var label = document.createElement('span');
+      label.className = 'page-name';
+      label.textContent = pg.name;
+      tab.appendChild(label);
+
+      var badge = document.createElement('span');
+      badge.className = 'page-badge';
+      badge.textContent = String(cnt);
+      tab.appendChild(badge);
+
+      if (isAct) {
+        var renBtn = document.createElement('button');
+        renBtn.type = 'button';
+        renBtn.className = 'page-act';
+        renBtn.setAttribute('aria-label', 'Đổi tên ' + pg.name);
+        renBtn.title = 'Đổi tên trang';
+        renBtn.innerHTML = '<svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M11.5 2.5l2 2L5 13H3v-2l8.5-8.5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" fill="none"/></svg>';
+        renBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          startRenamePage(pg.id);
+        });
+        tab.appendChild(renBtn);
+
+        if (pages.length > 1) {
+          var delBtn = document.createElement('button');
+          delBtn.type = 'button';
+          delBtn.className = 'page-act';
+          delBtn.setAttribute('aria-label', 'Xóa ' + pg.name);
+          delBtn.title = 'Xóa trang này';
+          delBtn.innerHTML = '<svg viewBox="0 0 16 16" width="11" height="11" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>';
+          delBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            removePage(pg.id);
+          });
+          tab.appendChild(delBtn);
+        }
+      }
+
+      tab.addEventListener('click', function () { switchPage(pg.id); });
+      tab.addEventListener('dblclick', function (e) {
+        e.stopPropagation();
+        if (pg.id !== activePageId) switchPage(pg.id);
+        startRenamePage(pg.id);
+      });
+      tab.addEventListener('keydown', function (e) {
+        if (e.target !== tab) return;
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); switchPage(pg.id); }
+      });
+
+      pagesEl.appendChild(tab);
+    });
+
+    if (prevBtn) prevBtn.disabled = curIdx <= 0;
+    if (nextBtn) nextBtn.disabled = curIdx < 0 || curIdx >= pages.length - 1;
+    var actEl = pagesEl.querySelector('.page-tab.act');
+    if (actEl && actEl.scrollIntoView) actEl.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }
+
+  function mountActivePage() {
+    Object.keys(els).forEach(function (id) {
+      if (els[id]) els[id].remove();
+    });
+    els = {};
+    dragDepth = 0;
+    dropEl.hidden = true;
+    currentPhotos().forEach(function (n) { mount(n, false); });
+    layoutAll();
+    refresh();
+    renderPages();
+  }
+
+  function switchPage(id) {
+    if (!id || !hasPage(id)) return;
+    if (id === activePageId && Object.keys(els).length === currentPhotos().length) return;
+    flush();
+    editingPageId = null;
+    activePageId = id;
+    persistPages();
+    mountActivePage();
+  }
+
+  function addPage() {
+    if (pages.length >= MAXPAGES) {
+      showToast('Đã đạt tối đa ' + MAXPAGES + ' trang ảnh.', false);
+      return;
+    }
+    var num = pages.length + 1;
+    var used = {};
+    pages.forEach(function (p) { used[p.name.toLowerCase()] = true; });
+    while (used[('trang ' + num)]) num++;
+    var pg = { id: newPageId(), name: 'Trang ' + num };
+    pages.push(pg);
+    switchPage(pg.id);
+    showToast('Đã thêm ' + pg.name + ' (nháy đúp tên trang để đổi tên)', false);
+  }
+
+  function startRenamePage(id) {
+    if (!hasPage(id)) return;
+    editingPageId = id;
+    renderPages();
+  }
+
+  function removePage(id) {
+    if (pages.length <= 1) return;
+    var idx = -1;
+    pages.forEach(function (p, i) { if (p.id === id) idx = i; });
+    if (idx < 0) return;
+    var pg = pages[idx];
+    var pageItems = photos.filter(function (n) { return n.pageId === id; });
+    if (pageItems.length && !confirm('Xóa "' + pg.name + '" cùng ' + pageItems.length + ' ảnh trong trang này?')) return;
+    flush();
+    pages.splice(idx, 1);
+    photos = photos.filter(function (n) { return n.pageId !== id; });
+    pageItems.forEach(function (n) { delete dirty[n.id]; });
+    if (pageItems.length) {
+      idbWrite(function (t) {
+        var ps = t.objectStore('photos');
+        var is = t.objectStore('imgs');
+        pageItems.forEach(function (n) { ps.delete(n.id); is.delete(n.id); });
+      });
+    }
+    if (activePageId === id) {
+      activePageId = pages[Math.min(idx, pages.length - 1)].id;
+    }
+    editingPageId = null;
+    persistPages();
+    removed = { type: 'page', page: pg, idx: idx, photos: pageItems };
+    mountActivePage();
+    showToast('Đã xóa "' + pg.name + '"', true);
   }
 
   // Thu nhỏ nếu ảnh lớn hơn mặt bàn hiện tại (ví dụ khi xoay điện thoại).
@@ -5124,7 +5499,7 @@ function deletePrinciple(id){
     el.style.setProperty('--x', p.x + 'px');
     el.style.setProperty('--y', p.y + 'px');
   }
-  function layoutAll() { photos.forEach(layoutOne); }
+  function layoutAll() { currentPhotos().forEach(layoutOne); }
   function curPos(n, el) {
     return toPx(n.fx, n.fy, layer.clientWidth, layer.clientHeight, el.offsetWidth, el.offsetHeight);
   }
@@ -5318,11 +5693,13 @@ function deletePrinciple(id){
     });
   }
 
-  function farSpot() {
+  function farSpot(pageId) {
+    var pid = pageId || activePageId;
+    var cur = photos.filter(function (n) { return n.pageId === pid; });
     var best = { fx: 0.5, fy: 0.5 }, bestD = -1;
     for (var i = 0; i < 12; i++) {
       var fx = 0.04 + Math.random() * 0.92, fy = 0.04 + Math.random() * 0.92, d = Infinity;
-      photos.forEach(function (o) {
+      cur.forEach(function (o) {
         var dd = Math.hypot(o.fx - fx, o.fy - fy);
         if (dd < d) d = dd;
       });
@@ -5331,31 +5708,35 @@ function deletePrinciple(id){
     return best;
   }
 
-  function addPhoto(img) {
-    var spot = farSpot();
+  function addPhoto(img, targetPageId) {
+    var pid = targetPageId && hasPage(targetPageId) ? targetPageId : activePageId;
+    var spot = farSpot(pid);
     var tilt = (1 + Math.random() * 3.5) * (Math.random() < 0.5 ? -1 : 1);
     var n = {
-      id: newId(), src: img.src, ar: fitAspect(img.w, img.h), w: sizeFor(refLayerWidth()),
+      id: newId(), pageId: pid, src: img.src, ar: fitAspect(img.w, img.h), w: sizeFor(refLayerWidth()),
       fx: spot.fx, fy: spot.fy, r: Math.round(tilt * 10) / 10, z: ++zTop, cap: ''
     };
     photos.push(n);
-    mount(n, true);
+    if (pid === activePageId) mount(n, true);
     persistNew(n);
     refresh();
+    renderPages();
   }
 
   var queue = Promise.resolve();
   function addFiles(fileList) {
     var files = Array.prototype.slice.call(fileList || []);
     if (!files.length) return;
+    var targetPageId = activePageId;
     queue = queue.then(async function () {
       var failed = 0, full = false;
       for (var i = 0; i < files.length; i++) {
-        if (photos.length >= MAXPHOTOS) { full = true; break; }
+        var pid = hasPage(targetPageId) ? targetPageId : activePageId;
+        if (countOnPage(pid) >= MAXPHOTOS) { full = true; break; }
         if (!/^image\//.test(files[i].type)) { failed++; continue; }
-        try { addPhoto(await readImage(files[i])); } catch (e) { failed++; }
+        try { addPhoto(await readImage(files[i]), pid); } catch (e) { failed++; }
       }
-      if (full) showToast('Bàn đã đầy (' + MAXPHOTOS + ' ảnh). Hãy bỏ bớt ảnh rồi thêm tiếp.', false);
+      if (full) showToast('Trang này đã đầy (' + MAXPHOTOS + ' ảnh). Hãy thêm trang mới hoặc bỏ bớt ảnh.', false);
       else if (failed) showToast('Không đọc được ' + failed + ' tệp. Hãy chọn ảnh JPG, PNG hoặc WebP.', false);
     });
   }
@@ -5367,24 +5748,46 @@ function deletePrinciple(id){
     var n = photos.splice(idx, 1)[0];
     if (els[id]) { els[id].remove(); delete els[id]; }
     delete dirty[id];
-    removed = { n: n, idx: idx };
+    removed = { type: 'photo', n: n, idx: idx };
     idbWrite(function (t) {
       t.objectStore('photos').delete(id);
       t.objectStore('imgs').delete(id);
     });
     refresh();
+    renderPages();
     showToast('Đã bỏ 1 ảnh', true);
   }
 
   function undo() {
     if (!removed) return;
-    var n = removed.n;
-    photos.splice(Math.min(removed.idx, photos.length), 0, n);
+    var r = removed;
     removed = null;
+    if (r.type === 'page') {
+      pages.splice(Math.min(r.idx, pages.length), 0, r.page);
+      r.photos.forEach(function (n) {
+        photos.push(n);
+        persistNew(n);
+      });
+      activePageId = r.page.id;
+      persistPages();
+      mountActivePage();
+      hideToast();
+      return;
+    }
+    var n = r.n;
+    if (!hasPage(n.pageId)) n.pageId = activePageId;
+    photos.splice(Math.min(r.idx, photos.length), 0, n);
     n.z = ++zTop;
-    mount(n, true);
     persistNew(n);
-    refresh();
+    if (n.pageId !== activePageId) {
+      activePageId = n.pageId;
+      persistPages();
+      mountActivePage();
+    } else {
+      mount(n, true);
+      refresh();
+      renderPages();
+    }
     hideToast();
   }
 
@@ -5504,7 +5907,7 @@ function deletePrinciple(id){
     return { src: c.toDataURL('image/jpeg', 0.86), w: w, h: h };
   }
 
-  function makeSeeds() {
+  function makeSeeds(pageId) {
     var W = sizeFor(refLayerWidth());
     var defs = [
       { kind: 'dawn', cap: 'Mẫu: bình minh', fx: 0.06, fy: 0.08, r: -2.6, k: 1.15 },
@@ -5513,7 +5916,7 @@ function deletePrinciple(id){
     ];
     return defs.map(function (d, i) {
       var p = paintScene(d.kind);
-      return { id: newId(), src: p.src, ar: fitAspect(p.w, p.h), w: Math.round(W * d.k), fx: d.fx, fy: d.fy, r: d.r, z: i + 1, cap: d.cap };
+      return { id: newId(), pageId: pageId, src: p.src, ar: fitAspect(p.w, p.h), w: Math.round(W * d.k), fx: d.fx, fy: d.fy, r: d.r, z: i + 1, cap: d.cap };
     });
   }
 
@@ -5523,20 +5926,40 @@ function deletePrinciple(id){
     var metas = await idbAll('photos');
     var imgs = await idbAll('imgs');
     var seeded = await idbGet('meta', 'seeded');
+    var savedPages = await idbGet('meta', 'pages');
+    var savedActive = await idbGet('meta', 'activePageId');
+
+    pages = cleanPages(savedPages);
+    activePageId = savedActive && hasPage(String(savedActive)) ? String(savedActive) : pages[0].id;
+    var defaultPageId = pages[0].id;
+
     var map = {};
     imgs.forEach(function (r) { if (r && r.id) map[r.id] = r.src; });
+    var migrated = [];
     var list = metas.filter(function (m) { return m && m.id && typeof map[m.id] === 'string'; })
-      .map(function (m) { return clean(m, map[m.id]); });
+      .map(function (m) {
+        var c = clean(m, map[m.id], defaultPageId);
+        if (m.pageId !== c.pageId) migrated.push(c);
+        return c;
+      });
     if (!list.length && !seeded) {
-      list = makeSeeds();
+      list = makeSeeds(defaultPageId);
       list.forEach(persistNew);
       idbWrite(function (t) { t.objectStore('meta').put(true, 'seeded'); });
+    } else if (migrated.length) {
+      idbWrite(function (t) {
+        var ps = t.objectStore('photos');
+        migrated.forEach(function (n) { ps.put(meta(n)); });
+      });
     }
+    if (!Array.isArray(savedPages) || !savedPages.length || savedActive !== activePageId) {
+      persistPages();
+    }
+
     photos = list;
     zTop = list.reduce(function (m, n) { return Math.max(m, n.z); }, 0);
-    photos.forEach(function (n) { mount(n, false); });
     booted = true;
-    refresh();
+    mountActivePage();
     if (!db) storageFail();
   }
 
@@ -5546,6 +5969,15 @@ function deletePrinciple(id){
     fileIn.value = '';
   });
   undoBtn.addEventListener('click', undo);
+  if (addPageBtn) addPageBtn.addEventListener('click', addPage);
+  if (prevBtn) prevBtn.addEventListener('click', function () {
+    var idx = pages.findIndex(function (p) { return p.id === activePageId; });
+    if (idx > 0) switchPage(pages[idx - 1].id);
+  });
+  if (nextBtn) nextBtn.addEventListener('click', function () {
+    var idx = pages.findIndex(function (p) { return p.id === activePageId; });
+    if (idx >= 0 && idx < pages.length - 1) switchPage(pages[idx + 1].id);
+  });
 
   // Thả tệp vào bất kỳ chỗ nào trên tab ảnh, hoặc dán ảnh bằng Ctrl+V khi đang mở tab ảnh.
   var dragDepth = 0;
@@ -5594,7 +6026,7 @@ function deletePrinciple(id){
     dragDepth = 0;
     dropEl.hidden = true;
     layoutAll();
-    if (booted) refresh();
+    if (booted) { refresh(); renderPages(); }
   };
 })();
 
