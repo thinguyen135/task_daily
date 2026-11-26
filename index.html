@@ -1965,27 +1965,6 @@ body.dragging { user-select: none; -webkit-user-select: none; }
 
   <!-- ══ TAB NGÀY ══ -->
   <div class="pnl" id="pnl-day">
-    <!-- STREAK CARD -->
-    <div class="streak-card" id="streakCard">
-      <div class="streak-top">
-        <div class="streak-main">
-          <div class="streak-fire">🔥</div>
-          <div>
-            <div class="streak-count" id="streakCount">0</div>
-            <div class="streak-label">NGÀY LIÊN TIẾP</div>
-          </div>
-        </div>
-        <div class="streak-info">
-          <div class="streak-best" id="streakBest">Cao nhất: 0 ngày</div>
-          <div class="streak-status streak-pending" id="streakStatus">⏳ Đang chờ...</div>
-        </div>
-      </div>
-      <div class="streak-chain" id="streakChain"></div>
-      <div class="streak-checkin">
-        <button class="streak-btn" id="streakBtn" onclick="checkInStreak()" disabled>🔒 Mở lúc 23:00</button>
-        <span class="streak-hint" id="streakHint">Tự xác nhận hoàn thành ngày · chỉ mở 23:00 – 24:00</span>
-      </div>
-    </div>
     <div class="srow">
       <div class="sb"><div class="sv" id="stT">0</div><div class="sl">Tổng</div></div>
       <div class="sb"><div class="sv" id="stD" style="color:var(--grn)">0</div><div class="sl">Xong</div></div>
@@ -3352,9 +3331,6 @@ function renderTasks(){
   setText('stT',tot);setText('stD',done);setText('stL',tot-done);setText('stH',high);
   var pct=tot?Math.round(done/tot*100):0;
   getEl('dpB').style.width=pct+'%';setText('dpP',pct+'%');
-  // streak check
-  checkAndUpdateStreak(tasks,done,tot);
-  renderStreakUI();
   updateTicketDisplay();
   var list=getEl('taskList');
   if(!tasks.length){list.innerHTML='<div class="es"><div class="ei">🚀</div><div class="et">Chưa có mục tiêu — hãy bắt đầu!</div></div>';return;}
@@ -4124,57 +4100,12 @@ function renderYRevDisplay(){
 }
 
 // ═══════════════════════════════════════
-// ═══ STREAK SYSTEM ═══
+// ═══ STREAK HELPERS (NGUYÊN TẮC) ═══
 // ═══════════════════════════════════════
-// Giờ mở nút tự xác nhận chuỗi lửa: 23:00 – 23:59
+// Giờ mở nút tự xác nhận chuỗi lửa & ô tích nguyên tắc: 23:00 – 23:59
 var STREAK_OPEN_HOUR=23;
 function isStreakWindowOpen(){
   return new Date().getHours()>=STREAK_OPEN_HOUR;
-}
-
-// Chỉ kiểm tra đứt chuỗi; việc cộng chuỗi do người dùng tự xác nhận (checkInStreak)
-function checkAndUpdateStreak(tasks, done, tot){
-  if(!D.streak)D.streak={count:0,best:0,lastDate:'',history:[]};
-  var today=todayKey();
-
-  // Check if we missed a day (lastDate is not today or yesterday)
-  if(D.streak.lastDate&&D.streak.lastDate!==today){
-    var last=new Date(D.streak.lastDate);
-    var t=new Date();t.setHours(0,0,0,0);last.setHours(0,0,0,0);
-    var diff=Math.round((t-last)/(1000*60*60*24));
-    if(diff>1){
-      // Missed more than 1 day → reset
-      D.streak.count=0;
-    }
-  }
-}
-
-// Người dùng tự xác nhận "hôm nay mình đã xong" — chỉ được bấm trong khung 23:00 – 24:00
-function checkInStreak(){
-  if(!D.streak)D.streak={count:0,best:0,lastDate:'',history:[]};
-  var today=todayKey();
-  if(D.streak.lastDate===today){renderStreakUI();return;}
-  if(!isStreakWindowOpen()){
-    showToast('🔒 Chưa tới giờ','Nút xác nhận chuỗi lửa chỉ mở từ 23:00 đến 24:00');
-    renderStreakUI();return;
-  }
-  checkAndUpdateStreak();
-  D.streak.count=(D.streak.count||0)+1;
-  D.streak.lastDate=today;
-  if(D.streak.count>(D.streak.best||0))D.streak.best=D.streak.count;
-  // Add to history (keep last 30 days max)
-  if(!D.streak.history)D.streak.history=[];
-  D.streak.history.push(today);
-  if(D.streak.history.length>30)D.streak.history=D.streak.history.slice(-30);
-  saveD();
-  // Celebrate
-  playFireStreak();
-  if(D.streak.count>1){
-    showToast('🔥 CHUỖI LỬA × '+D.streak.count,'Tuyệt vời! '+D.streak.count+' ngày liên tiếp!');
-  } else {
-    showToast('🔥 BẮT ĐẦU CHUỖI LỬA','Ngày đầu tiên — giữ lửa mỗi tối nhé!');
-  }
-  renderStreakUI();
 }
 
 function playFireStreak(){
@@ -4190,66 +4121,6 @@ function playFireStreak(){
     g.gain.exponentialRampToValueAtTime(.001,t+.22);
     o.start(t);o.stop(t+.23);
   });
-}
-
-function renderStreakUI(){
-  if(!D.streak)D.streak={count:0,best:0,lastDate:'',history:[]};
-  var count=D.streak.count||0;
-  var best=D.streak.best||0;
-  var today=todayKey();
-  var todayDone=(D.streak.lastDate===today);
-  setText('streakCount',count);
-  setText('streakBest','Cao nhất: '+best+' ngày');
-  var statusEl=getEl('streakStatus');
-  var k=todayKey();
-  var tasks=D.tasks[k]||[];
-  var tot=tasks.length,done=tasks.filter(function(t){return t.done;}).length;
-  var open=isStreakWindowOpen();
-  if(todayDone){
-    statusEl.className='streak-status streak-ok';
-    statusEl.textContent='✅ Hôm nay hoàn thành!';
-  } else if(open){
-    statusEl.className='streak-status streak-pending';
-    statusEl.textContent='🔥 Đã mở — xác nhận trước 24:00!';
-  } else if(tot>0){
-    statusEl.className='streak-status streak-pending';
-    statusEl.textContent='⏳ Còn '+(tot-done)+' nhiệm vụ · mở lúc 23:00';
-  } else {
-    statusEl.className='streak-status streak-pending';
-    statusEl.textContent='⏳ Mở xác nhận lúc 23:00';
-  }
-
-  // Nút tự xác nhận
-  var btn=getEl('streakBtn'),hint=getEl('streakHint');
-  if(btn){
-    if(todayDone){
-      btn.disabled=true;btn.textContent='✅ Đã giữ lửa hôm nay';
-      if(hint)hint.textContent='Hẹn gặp lại 23:00 tối mai';
-    } else if(open){
-      btn.disabled=false;btn.textContent='🔥 Hôm nay mình đã xong!';
-      if(hint)hint.textContent='Nút đóng lúc 24:00 — quên là mất chuỗi';
-    } else {
-      btn.disabled=true;btn.textContent='🔒 Mở lúc 23:00';
-      if(hint)hint.textContent='Tự xác nhận hoàn thành ngày · chỉ mở 23:00 – 24:00';
-    }
-  }
-
-  // Render chain — last 10 days
-  var chain=getEl('streakChain');
-  var days=['CN','T2','T3','T4','T5','T6','T7'];
-  var html='';
-  var history=D.streak.history||[];
-  for(var i=9;i>=0;i--){
-    var d=new Date();d.setDate(d.getDate()-i);
-    var dk=d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
-    var isToday=(i===0);
-    var isDone=history.indexOf(dk)>=0;
-    var cls='streak-day '+(isToday?'today ':'')+( isDone?'done':'empty');
-    var emoji=isDone?'✅':(isToday&&!isDone?'🔥':'·');
-    var lbl=pad(d.getDate())+'/'+pad(d.getMonth()+1);
-    html+='<div class="'+cls+'" title="'+lbl+'">'+emoji+'</div>';
-  }
-  chain.innerHTML=html;
 }
 
 // ═══════════════════════════════════════
@@ -6983,11 +6854,9 @@ initNotes();renderNotes();
 initPhotos();renderPhotos();
 var c=getEl('wheelCanvas');if(c)drawWheel(0);
 updateTicketDisplay();
-renderStreakUI();
 // Cập nhật trạng thái nút chuỗi lửa & ô tích nguyên tắc mỗi 30s (mở lúc 23:00, đóng lúc 24:00 / sang ngày mới)
 var _lastStreakTickKey=todayKey()+'|'+(isStreakWindowOpen()?'1':'0');
 setInterval(function(){
-  checkAndUpdateStreak();renderStreakUI();
   checkAndUpdatePrStreak();
   var nowKey=todayKey()+'|'+(isStreakWindowOpen()?'1':'0');
   if(nowKey!==_lastStreakTickKey){
